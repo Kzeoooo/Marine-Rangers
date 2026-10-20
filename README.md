@@ -1,58 +1,112 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Marine Rangers
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem Informasi Berbasis Website untuk Pelaporan dan Pemantauan Sampah di Pantai dan Laut.  
+Proyek Tugas Besar Mata Kuliah **Pengembangan Perangkat Lunak (PPL)** dengan metode **Scrum**, mendukung pencapaian **SDG 14: Life Below Water (Ekosistem Lautan)**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🛠 Tech Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- **Framework**: Laravel 12/13 (PHP 8.2+)
+- **Database**: MySQL / MariaDB (InnoDb)
+- **Architecture**: MVC dengan Eloquent ORM
+- **Testing**: PHPUnit / Laravel Feature Testing
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🚀 Panduan Instalasi (Setup Cepat)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Ikuti langkah-langkah berikut untuk menjalankan proyek di lingkungan lokal:
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
+### 1. Clone Repository & Masuk Direktori
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <url-repository>
+cd Marine-Rangers
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Pasang Dependensi Composer
+```bash
+composer install
+```
 
-## Contributing
+### 3. Konfigurasi Environment
+Salin template `.env.example` menjadi `.env`:
+- **Windows (Command Prompt / PowerShell)**:
+  ```powershell
+  copy .env.example .env
+  ```
+- **Linux / macOS**:
+  ```bash
+  cp .env.example .env
+  ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Buka file `.env` dan pastikan konfigurasi database sesuai dengan pengaturan MySQL lokal Anda:
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=marine_rangers
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## Code of Conduct
+### 4. Generate Application Encryption Key
+```bash
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 5. Buat Database MySQL
+Buat database bernama `marine_rangers` melalui phpMyAdmin, MySQL CLI, atau GUI client lainnya:
+```sql
+CREATE DATABASE marine_rangers CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
 
-## Security Vulnerabilities
+### 6. Jalankan Migrasi & Seeder Default
+Jalankan perintah ini untuk membangun tabel dan mengisi data awal (akun demo, kategori, 100+ laporan realistis pesisir Surabaya, serta riwayat pembersihan):
+```bash
+php artisan migrate --seed
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+> **Tips Uji Beban Peta (Opsional)**:  
+> Untuk mengisi 1.000 titik koordinat guna menguji performa peta spasial, jalankan:  
+> `php artisan db:seed --class=LaporanBesarSeeder`
 
-## License
+### 7. Menjalankan Server Lokal
+```bash
+php artisan serve
+```
+Akses aplikasi melalui browser di: `http://127.0.0.1:8000`
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 👥 Akun Demo untuk Pengujian
+
+Semua akun demo menggunakan password default: **`password`**
+
+| Role | Nama | Email | Organisasi / Keterangan |
+| :--- | :--- | :--- | :--- |
+| **Admin** | Admin Marine Rangers | `admin@marinerangers.test` | Dinas Lingkungan Hidup Surabaya |
+| **Pemantau** | Koordinator Pemantau | `pemantau@marinerangers.test` | Surabaya Peduli Laut |
+| **Masyarakat** | Budi Relawan | `relawan1@marinerangers.test` | Relawan Warga Pesisir 1 |
+| **Masyarakat** | Siti Relawan | `relawan2@marinerangers.test` | Relawan Warga Pesisir 2 |
+
+---
+
+## 🧪 Menjalankan Automated Test
+
+Untuk memverifikasi integritas database, relasi model Eloquent, default nilai role/status, cascade delete, dan seeder:
+```bash
+php artisan test --testdox
+```
+
+---
+
+## 🗄 Struktur & Skema Database
+
+Skema mengacu pada ERD proposal (Gambar 4) dengan penyesuaian primary key kustom:
+- `users` (PK: `id_user`)
+- `kategori` (PK: `id_kategori`)
+- `laporan` (PK: `id_laporan`, FK: `id_user`, `id_kategori`)
+- `pembersihan` (PK: `id_pembersihan`, FK: `id_laporan`, `id_user`)
+- `log_aktivitas` (PK: `id_log`, FK: `id_user`)
+- `dashboard` (PK: `id_dashboard`, FK: `id_user`)
