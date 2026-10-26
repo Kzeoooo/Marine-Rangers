@@ -22,13 +22,12 @@ class LaporanRequest extends FormRequest
     public function rules(): array
     {
         return [
-        'id_kategori' => ['nullable', 'exists:kategori,id_kategori'],
-        'wilayah' => ['required', 'string', 'max:100'],
-        'deskripsi' => ['nullable', 'string'],
-        'latitude' => ['required', 'numeric', 'between:-90,90'],
-        'longitude' => ['required', 'numeric', 'between:-180,180'],
-        'waktu_laporan' => ['required', 'date'],
-        'foto' => ['nullable', 'image', 'mimes:jpeg,png,jpg', 'max:2048'],
+            'id_kategori' => ['required', 'exists:kategori,id_kategori'],
+            'wilayah' => ['required', 'string', 'max:100'],
+            'deskripsi' => ['nullable', 'string'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'foto' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ];
     }
 }

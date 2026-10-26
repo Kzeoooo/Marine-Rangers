@@ -24,19 +24,20 @@ class LaporanController extends Controller
      */
     public function store(LaporanRequest $request): RedirectResponse
     {
-    $validated = $request->validated();
-    $validated['id_user'] = auth()->id();
-    $validated['status'] = Laporan::STATUS_BARU; // Menggunakan konstanta dari model
+        $validated = $request->validated();
+        $validated['id_user'] = auth()->id();
+        $validated['waktu_laporan'] = now('Asia/Jakarta');
+        $validated['status'] = Laporan::STATUS_BARU; // Menggunakan konstanta dari model
 
-    if ($request->hasFile('foto')) {
-        $path = $request->file('foto')->store('laporan', 'public');
-        $validated['foto'] = $path;
-    }
+        if ($request->hasFile('foto')) {
+            $path = $request->file('foto')->store('laporan', 'public');
+            $validated['foto'] = $path;
+        }
 
-    $laporan = Laporan::create($validated);
+        $laporan = Laporan::create($validated);
 
-    LogAktivitasHelper::catat(auth()->id(), 'Mengirimkan laporan insiden baru di wilayah: ' . $laporan->wilayah);
+        LogAktivitasHelper::catat(auth()->id(), 'Mengirimkan laporan insiden baru di wilayah: ' . $laporan->wilayah);
 
-    return redirect()->route('lapor')->with('success', 'Laporan berhasil dikirim dan sedang ditinjau.');
+        return redirect()->route('lapor')->with('success', 'Laporan berhasil dikirim dan sedang ditinjau.');
     }
 }

@@ -125,11 +125,26 @@ class AuthRbacTest extends TestCase
             'role' => User::ROLE_ADMIN,
         ]);
 
+        $pemantau = User::create([
+            'nama' => 'Pemantau Wilayah',
+            'email' => 'pemantau@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_PEMANTAU,
+        ]);
+
         // Tamu mencoba akses /peta harus diarahkan ke login
         $this->get('/peta')->assertRedirect('/login');
 
+        // Pemantau, admin, dan masyarakat boleh membuka /peta (200)
+        $this->actingAs($pemantau)->get('/peta')->assertStatus(200);
+        $this->actingAs($admin)->get('/peta')->assertStatus(200);
+        $this->actingAs($masyarakat)->get('/peta')->assertStatus(200);
+
         // Masyarakat akses /admin harus 403 Forbidden
         $this->actingAs($masyarakat)->get('/admin')->assertStatus(403);
+
+        // Pemantau akses /admin harus 403 Forbidden
+        $this->actingAs($pemantau)->get('/admin')->assertStatus(403);
 
         // Masyarakat akses /lapor harus 200 OK
         $this->actingAs($masyarakat)->get('/lapor')->assertStatus(200);
@@ -137,8 +152,52 @@ class AuthRbacTest extends TestCase
         // Admin akses /admin harus 200 OK
         $this->actingAs($admin)->get('/admin')->assertStatus(200);
 
+        // Pemantau akses /lapor harus 403 (khusus masyarakat)
+        $this->actingAs($pemantau)->get('/lapor')->assertStatus(403);
+
         // Admin akses /lapor harus 403 (karena /lapor khusus masyarakat)
         $this->actingAs($admin)->get('/lapor')->assertStatus(403);
+    }
+
+    /** @test */
+    public function pemantau_admin_dan_masyarakat_boleh_membuka_peta()
+    {
+        $masyarakat = User::create([
+            'nama' => 'Masyarakat User',
+            'email' => 'masyarakat_peta@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_MASYARAKAT,
+        ]);
+        $admin = User::create([
+            'nama' => 'Admin User',
+            'email' => 'admin_peta@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_ADMIN,
+        ]);
+        $pemantau = User::create([
+            'nama' => 'Pemantau User',
+            'email' => 'pemantau_peta@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_PEMANTAU,
+        ]);
+
+        $this->actingAs($pemantau)->get('/peta')->assertStatus(200);
+        $this->actingAs($admin)->get('/peta')->assertStatus(200);
+        $this->actingAs($masyarakat)->get('/peta')->assertStatus(200);
+    }
+
+    /** @test */
+    public function pemantau_ke_lapor_dilarang()
+    {
+        $pemantau = User::create([
+            'nama' => 'Pemantau Wilayah 2',
+            'email' => 'pemantau_lapor@example.com',
+            'password' => 'password123',
+            'role' => User::ROLE_PEMANTAU,
+        ]);
+
+        $this->actingAs($pemantau)->get('/lapor')->assertStatus(403);
+        $this->actingAs($pemantau)->post('/lapor', [])->assertStatus(403);
     }
 
     /** @test */

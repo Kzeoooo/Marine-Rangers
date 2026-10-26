@@ -26,20 +26,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
     // Halaman Lapor (Hanya Masyarakat)
-    Route::get('/lapor', [LaporanController::class, 'create'])->name('lapor');
-    Route::post('/lapor', [LaporanController::class, 'store'])->name('lapor.store');
+    Route::middleware('role:masyarakat')->group(function () {
+        Route::get('/lapor', [LaporanController::class, 'create'])->name('lapor');
+        Route::post('/lapor', [LaporanController::class, 'store'])->name('lapor.store');
+    });
 
-    // Halaman Peta (Pemantau & Admin)
+    // Halaman Peta (Semua pengguna yang sudah login)
     Route::get('/peta', function () {
-        $user = auth()->user();
-        abort_unless($user->isPemantau() || $user->isAdmin(), 403);
         return view('placeholder.peta');
     })->name('peta');
 
     // Halaman Admin (Hanya Admin)
     Route::get('/admin', function () {
-        $user = auth()->user();
-        abort_unless($user->isAdmin(), 403);
         return view('placeholder.admin');
-    })->name('admin');
+    })->middleware('role:admin')->name('admin');
 });

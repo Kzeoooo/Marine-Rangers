@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('laporan', function (Blueprint $table) {
             $table->id('id_laporan');
             $table->foreignId('id_user')->constrained('users', 'id_user')->onDelete('cascade');
-            $table->foreignId('id_kategori')->nullable()->constrained('kategori', 'id_kategori')->onDelete('restrict');
-            $table->string('foto', 255)->nullable(); // Sesuaikan jika foto opsional
-            $table->decimal('latitude', 10, 7)->nullable(); // Sesuaikan jika dalam test tidak diisi
-            $table->decimal('longitude', 10, 7)->nullable();
-            $table->string('wilayah', 100)->nullable();
+            $table->foreignId('id_kategori')->constrained('kategori', 'id_kategori')->onDelete('restrict');
+            $table->string('foto', 255);
+            $table->decimal('latitude', 10, 7);
+            $table->decimal('longitude', 10, 7);
+            $table->string('wilayah', 100);
             $table->text('deskripsi')->nullable();
-            $table->dateTime('waktu_laporan')->nullable();
+            $table->dateTime('waktu_laporan');
             $table->string('status', 20)->default('baru');
             $table->timestamps();
 

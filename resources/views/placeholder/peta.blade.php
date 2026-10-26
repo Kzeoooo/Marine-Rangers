@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
-<head><title>Lapor - Marine Rangers</title></head>
+<head><title>Peta - Marine Rangers</title></head>
 <body style="font-family: sans-serif; text-align: center; margin-top: 50px;">
     <!-- TODO frontend: ganti dengan desain dari mockup -->
-    <h1>Placeholder Halaman Lapor (Khusus Masyarakat)</h1>
+    <h1>Placeholder Halaman Peta</h1>
     <p>Selamat datang, {{ Auth::user()->nama ?? 'Pengguna' }}!</p>
     <form action="{{ route('logout') }}" method="POST">
         @csrf
