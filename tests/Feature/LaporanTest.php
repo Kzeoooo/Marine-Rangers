@@ -45,7 +45,7 @@ class LaporanTest extends TestCase
             'nama_kategori' => 'Limbah Minyak',
         ]);
 
-        $file = UploadedFile::fake()->image('insiden.jpg');
+        $file = UploadedFile::fake()->image('insiden.png');
 
         $response = $this->actingAs($masyarakat)->post('/lapor', [
             'id_kategori' => $kategori->id_kategori,
@@ -95,7 +95,7 @@ class LaporanTest extends TestCase
         $responseTanpaFoto->assertSessionHasErrors(['foto']);
 
         // 2. Pengiriman tanpa id_kategori harus ditolak
-        $file = UploadedFile::fake()->image('insiden.jpg');
+        $file = UploadedFile::fake()->image('insiden.png');
         $responseTanpaKategori = $this->actingAs($masyarakat)->post('/lapor', [
             'wilayah' => 'Pantai Kenjeran',
             'latitude' => -7.2278000,
@@ -126,7 +126,7 @@ class LaporanTest extends TestCase
             'nama_kategori' => 'Pencemaran Air',
         ]);
 
-        $file = UploadedFile::fake()->image('insiden.jpg');
+        $file = UploadedFile::fake()->image('insiden.png');
 
         // Pengguna mengirimkan waktu_laporan palsu di masa lalu
         $response = $this->actingAs($masyarakat)->post('/lapor', [
