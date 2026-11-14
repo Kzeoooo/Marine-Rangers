@@ -178,10 +178,11 @@ class DatabaseRelationTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
 
-        // 4 Akun user terdaftar
+        // 9 Akun user terdaftar (1 Admin, 6 Pemantau Daerah, 2 Relawan Masyarakat)
         $this->assertEquals(9, User::count());
         $this->assertDatabaseHas('users', ['email' => 'admin@marinerangers.test', 'role' => User::ROLE_ADMIN]);
         $this->assertDatabaseHas('users', ['email' => 'pemantau@marinerangers.test', 'role' => User::ROLE_PEMANTAU]);
+        $this->assertDatabaseHas('users', ['email' => 'pemantau.kenjeran@marinerangers.test', 'role' => User::ROLE_PEMANTAU]);
         $this->assertDatabaseHas('users', ['email' => 'relawan1@marinerangers.test', 'role' => User::ROLE_MASYARAKAT]);
         $this->assertDatabaseHas('users', ['email' => 'relawan2@marinerangers.test', 'role' => User::ROLE_MASYARAKAT]);
 

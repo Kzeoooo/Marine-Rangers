@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             KategoriSeeder::class, // Master kategori sampah pesisir
             UserSeeder::class,     // Akun demo Admin, Pemantau Daerah, & Relawan
-            // LaporanSeeder::class // Dinonaktifkan: database diawali dalam kondisi bersih (0 laporan dummy)
+            LaporanSeeder::class,  // 100+ data laporan dummy realistis pesisir Surabaya & data pembersihan
         ]);
     }
 }
