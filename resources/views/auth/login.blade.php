@@ -158,18 +158,34 @@
                     <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400 text-center mb-3">
                         ⚡ Quick Login Akun Demo (1-Klik)
                     </p>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-3 gap-2 mb-2">
                         <button type="button" onclick="fillLogin('admin@marinerangers.test', 'password')" class="p-2 text-center rounded-lg border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/50 text-[11px] transition-all">
-                            <span class="block font-bold text-indigo-700">Admin</span>
-                            <span class="text-slate-400 text-[10px]">DLH Surabaya</span>
+                            <span class="block font-bold text-indigo-700">Admin DLH</span>
+                            <span class="text-slate-400 text-[10px]">Semua Wilayah</span>
                         </button>
-                        <button type="button" onclick="fillLogin('pemantau@marinerangers.test', 'password')" class="p-2 text-center rounded-lg border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 text-[11px] transition-all">
+                        <button type="button" onclick="fillLogin('pemantau.kenjeran@marinerangers.test', 'password')" class="p-2 text-center rounded-lg border border-emerald-200 hover:border-emerald-400 bg-emerald-50/40 text-[11px] transition-all">
                             <span class="block font-bold text-emerald-700">Pemantau</span>
-                            <span class="text-slate-400 text-[10px]">Surabaya Laut</span>
+                            <span class="text-emerald-700 text-[10px]">Pantai Kenjeran</span>
                         </button>
                         <button type="button" onclick="fillLogin('relawan1@marinerangers.test', 'password')" class="p-2 text-center rounded-lg border border-slate-200 hover:border-sky-400 hover:bg-sky-50/50 text-[11px] transition-all">
                             <span class="block font-bold text-sky-700">Relawan</span>
                             <span class="text-slate-400 text-[10px]">Masyarakat</span>
+                        </button>
+                    </div>
+
+                    <!-- Quick buttons untuk uji pemantau wilayah lain -->
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" onclick="fillLogin('pemantau.kedungcowek@marinerangers.test', 'password')" class="p-2 text-center rounded-lg border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/30 text-[11px] transition-all">
+                            <span class="block font-bold text-slate-700">Pemantau</span>
+                            <span class="text-slate-500 text-[10px]">Kedung Cowek</span>
+                        </button>
+                        <button type="button" onclick="fillLogin('pemantau.tambakwedi@marinerangers.test', 'password')" class="p-2 text-center rounded-lg border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/30 text-[11px] transition-all">
+                            <span class="block font-bold text-slate-700">Pemantau</span>
+                            <span class="text-slate-500 text-[10px]">Tambak Wedi</span>
+                        </button>
+                        <button type="button" onclick="fillLogin('pemantau.sukolilo@marinerangers.test', 'password')" class="p-2 text-center rounded-lg border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/30 text-[11px] transition-all">
+                            <span class="block font-bold text-slate-700">Pemantau</span>
+                            <span class="text-slate-500 text-[10px]">Sukolilo Baru</span>
                         </button>
                     </div>
                 </div>

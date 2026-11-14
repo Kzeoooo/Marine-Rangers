@@ -50,11 +50,12 @@ class UserFactory extends Factory
     /**
      * State: Pemantau
      */
-    public function pemantau(?string $organisasi = 'Surabaya Peduli Laut'): static
+    public function pemantau(?string $organisasi = 'Surabaya Peduli Laut', ?string $wilayahTugas = 'Pantai Kenjeran'): static
     {
         return $this->state(fn (array $attributes) => [
             'role' => User::ROLE_PEMANTAU,
             'organisasi' => $organisasi,
+            'wilayah_tugas' => $wilayahTugas,
         ]);
     }
 

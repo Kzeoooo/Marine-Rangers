@@ -12,25 +12,48 @@ use Illuminate\View\View;
 class PetaController extends Controller
 {
     /**
+     * Koordinat acuan pusat wilayah pesisir untuk fokus peta pemantau.
+     */
+    protected const KOORDINAT_WILAYAH = [
+        'Pantai Kenjeran' => ['lat' => -7.2275000, 'lng' => 112.7985000],
+        'Kedung Cowek' => ['lat' => -7.2140000, 'lng' => 112.7870000],
+        'Pantai Ria Kenjeran' => ['lat' => -7.2420000, 'lng' => 112.8020000],
+        'Tambak Wedi' => ['lat' => -7.2030000, 'lng' => 112.7750000],
+        'Sukolilo Baru' => ['lat' => -7.2340000, 'lng' => 112.7960000],
+    ];
+
+    /**
      * Tampilkan halaman Peta Sebaran Sampah (Mockup 5).
+     * Jika pengguna adalah pemantau dengan wilayah tugas, data dibatasi hanya pada wilayahnya.
      */
     public function index(Request $request): View
     {
         $kategoris = Kategori::all();
+        $user = auth()->user();
+
+        // Cek apakah pengguna adalah pemantau dengan wilayah tugas spesifik
+        $isPemantauWilayah = $user && $user->isPemantau() && !empty($user->wilayah_tugas);
+        $wilayahTugasPemantau = $isPemantauWilayah ? $user->wilayah_tugas : null;
 
         // Query Laporan dengan Filter
         $query = Laporan::with('kategori');
+
+        // Batasi wilayah jika pemantau
+        if ($isPemantauWilayah) {
+            $query->where('wilayah', 'like', '%' . $wilayahTugasPemantau . '%');
+            $wilayahFilter = $wilayahTugasPemantau;
+        } else {
+            // Filter Wilayah untuk Admin & Masyarakat
+            $wilayahFilter = $request->input('wilayah', 'semua');
+            if (!empty($wilayahFilter) && $wilayahFilter !== 'semua') {
+                $query->where('wilayah', 'like', '%' . $wilayahFilter . '%');
+            }
+        }
 
         // Filter Jenis Sampah (Kategori)
         $selectedKategori = $request->input('kategori');
         if (!empty($selectedKategori) && is_array($selectedKategori)) {
             $query->whereIn('id_kategori', $selectedKategori);
-        }
-
-        // Filter Wilayah
-        $wilayahFilter = $request->input('wilayah');
-        if (!empty($wilayahFilter) && $wilayahFilter !== 'semua') {
-            $query->where('wilayah', 'like', '%' . $wilayahFilter . '%');
         }
 
         // Filter Periode
@@ -43,22 +66,30 @@ class PetaController extends Controller
 
         $laporans = $query->get();
 
-        // 1. Total Laporan & Tambahan Minggu Ini
-        $totalLaporan = Laporan::count();
-        $laporanMingguIni = Laporan::where('waktu_laporan', '>=', now()->subDays(7))->count();
+        // Query dasar untuk statistik (jika pemantau, statistik hanya untuk wilayah tugasnya)
+        $statQuery = Laporan::query();
+        if ($isPemantauWilayah) {
+            $statQuery->where('wilayah', 'like', '%' . $wilayahTugasPemantau . '%');
+        }
 
-        // 2. Wilayah Prioritas (Wilayah dengan laporan terbanyak yang belum selesai)
-        $prioritasWilayah = Laporan::select('wilayah', DB::raw('count(*) as total'))
+        // 1. Total Laporan & Tambahan Minggu Ini
+        $totalLaporan = (clone $statQuery)->count();
+        $laporanMingguIni = (clone $statQuery)->where('waktu_laporan', '>=', now()->subDays(7))->count();
+
+        // 2. Wilayah Prioritas
+        $prioritasWilayah = (clone $statQuery)->select('wilayah', DB::raw('count(*) as total'))
             ->where('status', '!=', Laporan::STATUS_SELESAI)
             ->groupBy('wilayah')
             ->orderByDesc('total')
             ->first();
 
-        $namaWilayahPrioritas = $prioritasWilayah ? $prioritasWilayah->wilayah : 'Pantai Kenjeran';
+        $namaWilayahPrioritas = $prioritasWilayah 
+            ? $prioritasWilayah->wilayah 
+            : ($isPemantauWilayah ? $wilayahTugasPemantau : 'Belum Ada Laporan Aktif');
         $jumlahLaporanPrioritas = $prioritasWilayah ? $prioritasWilayah->total : 0;
 
         // 3. Persentase Sudah Ditindaklanjuti (Dipantau, Ditindaklanjuti, atau Selesai)
-        $ditindaklanjutiCount = Laporan::whereIn('status', [
+        $ditindaklanjutiCount = (clone $statQuery)->whereIn('status', [
             Laporan::STATUS_DIPANTAU,
             Laporan::STATUS_DITINDAKLANJUTI,
             Laporan::STATUS_SELESAI,
@@ -66,14 +97,10 @@ class PetaController extends Controller
 
         $persentaseDitindaklanjuti = $totalLaporan > 0 
             ? round(($ditindaklanjutiCount / $totalLaporan) * 100) 
-            : 76;
+            : 0;
 
         // Siapkan Data Titik Spasial untuk Leaflet Map
         $titikLaporan = $laporans->map(function ($lap) {
-            // Tentukan prioritas warna sesuai mockup
-            // Merah = Prioritas tinggi (baru)
-            // Oranye = Sedang (dipantau / ditindaklanjuti)
-            // Biru = Dipantau / Selesai
             $color = '#d93829'; // default red
             $priorityLabel = 'Prioritas tinggi';
 
@@ -103,8 +130,24 @@ class PetaController extends Controller
             ];
         });
 
-        // Daftar wilayah unik untuk dropdown
-        $daftarWilayah = Laporan::select('wilayah')->distinct()->pluck('wilayah');
+        // Daftar wilayah untuk dropdown filter
+        if ($isPemantauWilayah) {
+            $daftarWilayah = collect([$wilayahTugasPemantau]);
+        } else {
+            $daftarWilayah = Laporan::select('wilayah')->distinct()->pluck('wilayah');
+        }
+
+        // Koordinat default fokus peta
+        $defaultCenter = [-7.2275, 112.7888];
+        $defaultZoom = 12;
+
+        if ($isPemantauWilayah && isset(self::KOORDINAT_WILAYAH[$wilayahTugasPemantau])) {
+            $defaultCenter = [
+                self::KOORDINAT_WILAYAH[$wilayahTugasPemantau]['lat'],
+                self::KOORDINAT_WILAYAH[$wilayahTugasPemantau]['lng'],
+            ];
+            $defaultZoom = 15;
+        }
 
         return view('peta.index', compact(
             'kategoris',
@@ -117,7 +160,11 @@ class PetaController extends Controller
             'selectedKategori',
             'wilayahFilter',
             'periodeFilter',
-            'daftarWilayah'
+            'daftarWilayah',
+            'isPemantauWilayah',
+            'wilayahTugasPemantau',
+            'defaultCenter',
+            'defaultZoom'
         ));
     }
 }

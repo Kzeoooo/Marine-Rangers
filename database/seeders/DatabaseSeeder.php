@@ -12,9 +12,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            KategoriSeeder::class,
-            UserSeeder::class,
-            LaporanSeeder::class,
+            KategoriSeeder::class, // Master kategori sampah pesisir
+            UserSeeder::class,     // Akun demo Admin, Pemantau Daerah, & Relawan
+            // LaporanSeeder::class // Dinonaktifkan: database diawali dalam kondisi bersih (0 laporan dummy)
         ]);
     }
 }

@@ -93,30 +93,39 @@
             </div>
         </div>
 
-        <!-- Role Action: Status Quick Switcher for Pemantau and Admin -->
+        <!-- Role Action: Status Quick Switcher for Pemantau ONLY -->
         @auth
-            @if((Auth::user()->isPemantau() || Auth::user()->isAdmin()) && !$laporan->isSelesai())
+            @if(Auth::user()->isPemantau() && !$laporan->isSelesai())
                 <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <span class="text-slate-500 font-medium">Aksi Cepat Tahapan:</span>
+                    <span class="text-slate-500 font-medium">Aksi Tahapan Pemantau ({{ Auth::user()->wilayah_tugas }}):</span>
                     <div class="flex items-center gap-2">
                         @if($laporan->status === 'baru')
                             <form action="{{ route('laporan.update_status', $laporan->id_laporan) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="status" value="dipantau">
-                                <button type="submit" class="px-3 py-1.5 rounded-lg bg-sky-100 text-[#004d6d] hover:bg-sky-200 font-semibold transition-colors">
-                                    → Set Dipantau
+                                <button type="submit" class="px-3 py-1.5 rounded-lg bg-sky-100 text-[#004d6d] hover:bg-sky-200 font-semibold transition-colors flex items-center gap-1.5">
+                                    <span>→ Verifikasi Lapangan (Dipantau)</span>
                                 </button>
                             </form>
                         @elseif($laporan->status === 'dipantau')
                             <form action="{{ route('laporan.update_status', $laporan->id_laporan) }}" method="POST">
                                 @csrf
                                 <input type="hidden" name="status" value="ditindaklanjuti">
-                                <button type="submit" class="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 font-semibold transition-colors">
-                                    → Set Ditindaklanjuti
+                                <button type="submit" class="px-3 py-1.5 rounded-lg bg-amber-100 text-amber-800 hover:bg-amber-200 font-semibold transition-colors flex items-center gap-1.5">
+                                    <span>→ Mulai Penanganan (Ditindaklanjuti)</span>
                                 </button>
                             </form>
                         @endif
                     </div>
+                </div>
+            @elseif(Auth::user()->isAdmin())
+                <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Mode Pengawasan Admin (Read-Only) — Pembaruan status dikelola langsung oleh Pemantau Wilayah: <strong class="text-slate-700 ml-1">{{ $laporan->wilayah }}</strong>
+                    </span>
                 </div>
             @endif
         @endauth
@@ -209,8 +218,8 @@
                 @endif
             </div>
 
-        @elseif(Auth::check() && (Auth::user()->isPemantau() || Auth::user()->isAdmin()))
-            <!-- Form Aksi Pembersihan untuk Pemantau & Admin (Mockup 4) -->
+        @elseif(Auth::check() && Auth::user()->isPemantau())
+            <!-- Form Aksi Pembersihan untuk Pemantau (Mockup 4) -->
             <form action="{{ route('laporan.tindaklanjut', $laporan->id_laporan) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                 @csrf
 
@@ -254,10 +263,27 @@
                 <!-- Tombol Tandai Selesai (Mockup 4) -->
                 <div>
                     <button type="submit" class="btn-primary px-8 py-3 rounded-xl font-semibold text-sm shadow-sm hover:shadow transition-all">
-                        Tandai Selesai
+                        Tandai Selesai ✓
                     </button>
                 </div>
             </form>
+
+        @elseif(Auth::check() && Auth::user()->isAdmin())
+            <!-- View untuk Administrator (Read-Only / Supervisor) -->
+            <div class="rounded-2xl bg-indigo-50/50 border border-indigo-100 p-6 sm:p-7 text-xs text-slate-600 space-y-3">
+                <div class="flex items-center gap-2 text-indigo-700 font-bold text-sm">
+                    <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    <span>Peninjauan Administrator</span>
+                </div>
+                <p>
+                    Laporan ini saat ini berstatus <strong class="text-slate-800 uppercase tracking-wide">{{ $laporan->status }}</strong>. Verifikasi lapangan, penanganan sampah, dan dokumentasi hasil pembersihan dilakukan secara mandiri oleh <strong>Pemantau Wilayah {{ $laporan->wilayah }}</strong>.
+                </p>
+                <div class="text-[11px] text-slate-400">
+                    Sebagai Administrator, Anda dapat memantau performa seluruh pesisir melalui <a href="{{ route('admin') }}" class="text-indigo-600 font-semibold hover:underline">Panel Kontrol</a> atau <a href="{{ route('peta') }}" class="text-indigo-600 font-semibold hover:underline">Peta Spasial</a>.
+                </div>
+            </div>
 
         @else
             <!-- View untuk Masyarakat / Pengunjung -->

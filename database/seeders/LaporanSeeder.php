@@ -18,7 +18,8 @@ class LaporanSeeder extends Seeder
     {
         $users = User::all();
         $masyarakatUsers = $users->where('role', User::ROLE_MASYARAKAT);
-        $pemantauUser = $users->firstWhere('role', User::ROLE_PEMANTAU) ?? $users->first();
+        $pemantauUsers = $users->where('role', User::ROLE_PEMANTAU);
+        $pemantauUser = $pemantauUsers->first() ?? $users->first();
         $kategoris = Kategori::all();
 
         if ($users->isEmpty() || $kategoris->isEmpty()) {
@@ -126,9 +127,11 @@ class LaporanSeeder extends Seeder
             if ($status === Laporan::STATUS_SELESAI) {
                 $tanggalPembersihan = (clone $waktuLaporan)->addDays(mt_rand(1, 3))->min(Carbon::now('Asia/Jakarta'));
 
+                $pemantauBertugas = $pemantauUsers->first(fn($p) => $p->wilayah_tugas === $loc['wilayah']) ?? $pemantauUser;
+
                 Pembersihan::create([
                     'id_laporan' => $laporan->id_laporan,
-                    'id_user' => $pemantauUser->id_user,
+                    'id_user' => $pemantauBertugas->id_user,
                     'tanggal' => $tanggalPembersihan->toDateString(),
                     'deskripsi_hasil' => 'Aksi bersih pantai dilaksanakan bersama 15 relawan pesisir dan komunitas. Berhasil mengumpulkan sekitar ' . mt_rand(20, 85) . ' kg sampah untuk disalurkan ke bank sampah terdekat.',
                     'foto_hasil' => 'uploads/pembersihan/sample_bersih_' . (($i % 5) + 1) . '.jpg',

@@ -4,6 +4,36 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+
+    @if($isPemantauWilayah)
+        <!-- Banner Mode Pemantau Khusus Wilayah -->
+        <div class="mb-6 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-[#e2f0f5] to-emerald-50 border border-[#004d6d]/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3.5">
+                <div class="w-11 h-11 rounded-xl bg-[#004d6d] text-white flex items-center justify-center shrink-0 shadow-sm">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-sm sm:text-base font-bold text-[#004d6d]">Area Penugasan: {{ $wilayahTugasPemantau }}</h2>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#004d6d] text-white uppercase tracking-wider">
+                            Pemantau Aktif
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-600 mt-0.5">
+                        Peta spasial dan statistik operasional difokuskan khusus untuk area Anda agar aksi penanganan sampah pesisir lebih cepat dan tertarget.
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs font-semibold text-[#004d6d] bg-white px-3.5 py-2 rounded-xl border border-slate-200 shrink-0">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Fokus Wilayah Terdekat</span>
+            </div>
+        </div>
+    @endif
+
     <!-- Top Row: Filter Sidebar & Map (Mockup 5) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
         <!-- Left Filter Card (Mockup 5) -->
@@ -46,17 +76,25 @@
                         <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
                             WILAYAH
                         </span>
-                        <select 
-                            name="wilayah" 
-                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#004d6d]/20 focus:border-[#004d6d] bg-white cursor-pointer"
-                        >
-                            <option value="semua" {{ $wilayahFilter === 'semua' ? 'selected' : '' }}>Surabaya, Jawa Timur (Semua)</option>
-                            @foreach($daftarWilayah as $wil)
-                                <option value="{{ $wil }}" {{ $wilayahFilter === $wil ? 'selected' : '' }}>
-                                    {{ $wil }}
-                                </option>
-                            @endforeach
-                        </select>
+                        @if($isPemantauWilayah)
+                            <div class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-700 flex items-center justify-between">
+                                <span class="font-medium text-slate-800">{{ $wilayahTugasPemantau }}</span>
+                                <span class="text-[10px] uppercase font-bold text-[#004d6d] bg-[#e2f0f5] px-2 py-0.5 rounded">Terkunci</span>
+                            </div>
+                            <input type="hidden" name="wilayah" value="{{ $wilayahTugasPemantau }}">
+                        @else
+                            <select 
+                                name="wilayah" 
+                                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#004d6d]/20 focus:border-[#004d6d] bg-white cursor-pointer"
+                            >
+                                <option value="semua" {{ $wilayahFilter === 'semua' ? 'selected' : '' }}>Surabaya, Jawa Timur (Semua)</option>
+                                @foreach($daftarWilayah as $wil)
+                                    <option value="{{ $wil }}" {{ $wilayahFilter === $wil ? 'selected' : '' }}>
+                                        {{ $wil }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
 
                     <!-- PERIODE (Mockup 5) -->
@@ -111,7 +149,7 @@
         <!-- Stat Card 1: TOTAL LAPORAN -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7">
             <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                TOTAL LAPORAN
+                TOTAL LAPORAN {{ $isPemantauWilayah ? '(' . strtoupper($wilayahTugasPemantau) . ')' : '' }}
             </span>
             <div class="font-serif-title text-4xl sm:text-5xl font-bold text-slate-900 mb-1">
                 {{ $totalLaporan }}
@@ -124,13 +162,13 @@
         <!-- Stat Card 2: WILAYAH PRIORITAS -->
         <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7">
             <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                WILAYAH PRIORITAS
+                {{ $isPemantauWilayah ? 'STATUS WILAYAH ANDA' : 'WILAYAH PRIORITAS' }}
             </span>
             <div class="font-serif-title text-2xl sm:text-3xl font-bold text-slate-900 mb-1 truncate">
                 {{ $namaWilayahPrioritas }}
             </div>
             <div class="text-xs text-slate-500">
-                {{ $jumlahLaporanPrioritas }} laporan aktif
+                {{ $jumlahLaporanPrioritas }} laporan aktif belum selesai
             </div>
         </div>
 
@@ -143,7 +181,7 @@
                 {{ $persentaseDitindaklanjuti }}%
             </div>
             <div class="text-xs text-slate-500">
-                dari seluruh laporan
+                dari seluruh laporan {{ $isPemantauWilayah ? 'wilayah ini' : 'tercatat' }}
             </div>
         </div>
     </div>
@@ -153,10 +191,13 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Center around Surabaya beach & coast
+        const defaultCenter = @json($defaultCenter);
+        const defaultZoom = {{ $defaultZoom }};
+
+        // Center around beach & coast
         const map = L.map('main-map', {
-            center: [-7.2275, 112.7888],
-            zoom: 12,
+            center: defaultCenter,
+            zoom: defaultZoom,
             zoomControl: true,
         });
 
@@ -225,7 +266,7 @@
             });
 
             if (bounds.length > 0) {
-                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+                map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
             }
         }
     });

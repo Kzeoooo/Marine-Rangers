@@ -157,10 +157,15 @@
                 <div class="space-y-3">
                     @foreach($users as $u)
                         <div class="flex items-center justify-between text-xs">
-                            <div>
-                                <p class="font-semibold text-slate-800">{{ $u->nama }}</p>
-                                <p class="text-[11px] text-slate-400">{{ $u->email }}</p>
-                            </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800">{{ $u->nama }}</p>
+                                    <p class="text-[11px] text-slate-400">{{ $u->email }}</p>
+                                    @if($u->isPemantau() && $u->wilayah_tugas)
+                                        <span class="inline-block text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded font-medium mt-0.5">
+                                            Wilayah: {{ $u->wilayah_tugas }}
+                                        </span>
+                                    @endif
+                                </div>
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold 
                                 {{ $u->isAdmin() ? 'bg-indigo-50 text-indigo-700' : ($u->isPemantau() ? 'bg-emerald-50 text-emerald-700' : 'bg-sky-50 text-sky-700') }}">
                                 {{ ucfirst($u->role) }}

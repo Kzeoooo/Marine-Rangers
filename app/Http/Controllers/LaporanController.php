@@ -50,15 +50,31 @@ class LaporanController extends Controller
     public function show(int|string $id): View
     {
         $laporan = Laporan::with(['user', 'kategori', 'pembersihan.user'])->findOrFail($id);
+
+        $user = auth()->user();
+        if ($user && $user->isPemantau() && !$user->canAccessWilayah($laporan->wilayah)) {
+            abort(403, 'Akses Dibatasi: Anda terdaftar sebagai Pemantau wilayah ' . ($user->wilayah_tugas ?? '-') . ' dan hanya diizinkan mengakses laporan di wilayah tugas Anda.');
+        }
+
         return view('lapor.show', compact('laporan'));
     }
 
     /**
      * Update status laporan (misal: 'dipantau', 'ditindaklanjuti').
+     * Eksklusif hanya untuk Pemantau Wilayah terkait.
      */
     public function updateStatus(Request $request, int|string $id): RedirectResponse
     {
+        $user = auth()->user();
+        if (!$user || !$user->isPemantau()) {
+            abort(403, 'Akses Dibatasi: Hanya Pemantau Wilayah yang memiliki wewenang untuk mengubah status operasional laporan.');
+        }
+
         $laporan = Laporan::findOrFail($id);
+
+        if (!$user->canAccessWilayah($laporan->wilayah)) {
+            abort(403, 'Akses Dibatasi: Anda tidak dapat mengubah status laporan di luar wilayah tugas Anda (' . ($user->wilayah_tugas ?? '-') . ').');
+        }
 
         $request->validate([
             'status' => 'required|in:' . implode(',', Laporan::STATUSES),
@@ -74,10 +90,20 @@ class LaporanController extends Controller
 
     /**
      * Konfirmasi aksi pembersihan dan tandai laporan selesai (Mockup 4).
+     * Eksklusif hanya untuk Pemantau Wilayah terkait.
      */
     public function tindakLanjut(Request $request, int|string $id): RedirectResponse
     {
+        $user = auth()->user();
+        if (!$user || !$user->isPemantau()) {
+            abort(403, 'Akses Dibatasi: Hanya Pemantau Wilayah yang memiliki wewenang untuk menyelesaikan aksi pembersihan.');
+        }
+
         $laporan = Laporan::findOrFail($id);
+
+        if (!$user->canAccessWilayah($laporan->wilayah)) {
+            abort(403, 'Akses Dibatasi: Anda tidak dapat menyelesaikan aksi pembersihan pada laporan di luar wilayah tugas Anda (' . ($user->wilayah_tugas ?? '-') . ').');
+        }
 
         $request->validate([
             'foto_hasil' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',

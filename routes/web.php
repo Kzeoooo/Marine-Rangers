@@ -45,8 +45,8 @@ Route::middleware('auth')->group(function () {
     // Detail Laporan & Tindak Lanjut (Mockup 4)
     Route::get('/laporan/{id}', [LaporanController::class, 'show'])->name('laporan.show');
 
-    // Aksi Pembersihan dan Update Status (Khusus Pemantau & Admin)
-    Route::middleware('role:pemantau,admin')->group(function () {
+    // Aksi Pembersihan dan Update Status (Eksklusif Pemantau Wilayah)
+    Route::middleware('role:pemantau')->group(function () {
         Route::post('/laporan/{id}/status', [LaporanController::class, 'updateStatus'])->name('laporan.update_status');
         Route::post('/laporan/{id}/tindaklanjut', [LaporanController::class, 'tindakLanjut'])->name('laporan.tindaklanjut');
     });

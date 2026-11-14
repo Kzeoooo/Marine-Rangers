@@ -47,6 +47,7 @@ class User extends Authenticatable
         'password',
         'role',
         'organisasi',
+        'wilayah_tugas',
     ];
 
     /**
@@ -85,6 +86,29 @@ class User extends Authenticatable
     public function isMasyarakat(): bool
     {
         return $this->role === self::ROLE_MASYARAKAT;
+    }
+
+    /**
+     * Memeriksa apakah pengguna memiliki hak akses terhadap wilayah tertentu.
+     * Admin dan masyarakat dapat mengakses seluruh wilayah.
+     * Pemantau dibatasi hanya untuk wilayah tugasnya.
+     */
+    public function canAccessWilayah(?string $wilayah): bool
+    {
+        if ($this->isAdmin() || !$this->isPemantau()) {
+            return true;
+        }
+
+        if (empty($this->wilayah_tugas)) {
+            return true;
+        }
+
+        if (empty($wilayah)) {
+            return false;
+        }
+
+        return stripos($wilayah, $this->wilayah_tugas) !== false 
+            || stripos($this->wilayah_tugas, $wilayah) !== false;
     }
 
     // Relasi Eloquent

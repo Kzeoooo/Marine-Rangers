@@ -7,10 +7,31 @@ Proyek Tugas Besar Mata Kuliah **Pengembangan Perangkat Lunak (PPL)** dengan met
 
 ## 🛠 Tech Stack
 
-- **Framework**: Laravel 12/13 (PHP 8.2+)
-- **Database**: MySQL / MariaDB (InnoDb)
+- **Framework**: Laravel 11/12 (PHP 8.2+)
+- **Database**: MySQL / MariaDB (InnoDB)
+- **Frontend / Styling**: Tailwind CSS, Blade Template Engine, Leaflet.js (Peta Spasial Interaktif)
 - **Architecture**: MVC dengan Eloquent ORM
 - **Testing**: PHPUnit / Laravel Feature Testing
+
+---
+
+## 🌊 Fitur Utama
+
+1. **Pelaporan Sampah Pesisir (Masyarakat / Relawan)**:
+   - Pelaporan sampah berbasis foto bukti dan geolokasi (GPS/koordinat otomatis).
+   - Kategorisasi jenis sampah (plastik, styrofoam, jaring/ghost gear, kaca/logam, dll.).
+2. **Peta Sebaran Spasial & Pemantauan Khusus Wilayah (Role Pemantau)**:
+   - **Isolasi Wilayah Tugas Pemantau**: Setiap pemantau difokuskan hanya pada daerah penugasannya masing-masing (contoh: Kenjeran, Kedung Cowek, Tambak Wedi, dll.).
+   - Peta interaktif Leaflet otomatis memusatkan tampilan (*auto-center* & *auto-zoom*) ke koordinat pesisir wilayah tugas.
+   - Statistik operasional (Total Laporan, Laporan Aktif, Persentase Tindak Lanjut) terhitung secara lokal untuk area pemantau terkait.
+   - **Wewenang Eksklusif Pengubahan Status**: Hanya pemantau wilayah yang berhak mengubah tahapan status laporan (*Dipantau* ➔ *Ditindaklanjuti* ➔ *Selesai*) untuk menjaga integritas fakta lapangan.
+   - Proteksi otorisasi berlapis (HTTP 403 Forbidden) mencegah akses dan aksi di luar wilayah kewenangan.
+3. **Panel Kontrol Administrator (Dinas Lingkungan Hidup)**:
+   - Pengawasan menyeluruh (*monitoring & audit trail*) seluruh titik wilayah pesisir tanpa batasan area (mode pengawasan read-only pada detail laporan).
+   - Pemantauan aktivitas sistem, rekapitulasi akun pengguna, dan penugasan wilayah pemantau.
+4. **Alur Status Laporan & Konfirmasi Pembersihan**:
+   - 4 Tahapan status transparan: **Baru** ➔ **Dipantau** ➔ **Ditindaklanjuti** ➔ **Selesai**.
+   - Pelaporan hasil aksi pembersihan pantai disertai unggah foto bukti dan deskripsi hasil oleh pemantau lapangan.
 
 ---
 
@@ -62,14 +83,21 @@ CREATE DATABASE marine_rangers CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
 ### 6. Jalankan Migrasi & Seeder Default
-Jalankan perintah ini untuk membangun tabel dan mengisi data awal (akun demo, kategori, 100+ laporan realistis pesisir Surabaya, serta riwayat pembersihan):
+Jalankan perintah ini untuk membangun tabel dan mengisi data master (akun demo seluruh peran dan kategori sampah pesisir). Database dimulai dalam kondisi **bersih (0 laporan dummy)** sehingga siap menerima input laporan baru:
 ```bash
 php artisan migrate --seed
 ```
 
-> **Tips Uji Beban Peta (Opsional)**:  
-> Untuk mengisi 1.000 titik koordinat guna menguji performa peta spasial, jalankan:  
-> `php artisan db:seed --class=LaporanBesarSeeder`
+> **Perintah Bersihkan Data Laporan**:  
+> Jika sewaktu-waktu ingin membersihkan seluruh laporan dan riwayat aksi pembersihan agar database kembali kosong bersih:  
+> ```bash
+> php artisan laporan:clear
+> ```
+
+> **Tips Isi Dummy Laporan untuk Uji Coba (Opsional)**:  
+> Jika memerlukan data dummy untuk simulasi:  
+> - 100+ laporan realistis: `php artisan db:seed --class=LaporanSeeder`  
+> - 1.000 titik koordinat (uji performa peta): `php artisan db:seed --class=LaporanBesarSeeder`
 
 ### 7. Menjalankan Server Lokal
 ```bash
@@ -79,22 +107,27 @@ Akses aplikasi melalui browser di: `http://127.0.0.1:8000`
 
 ---
 
-## 👥 Akun Demo untuk Pengujian
+## 👥 Akun Demo untuk Pengujian Hak Akses
 
-Semua akun demo menggunakan password default: **`password`**
+Semua akun demo menggunakan password default: **`password`**  
+*(Tersedia juga fitur tombol **Quick Login 1-Klik** di halaman login untuk kemudahan pengujian antarkolega).*
 
-| Role | Nama | Email | Organisasi / Keterangan |
+| Role / Peran | Wilayah Penugasan | Email | Nama Akun & Organisasi |
 | :--- | :--- | :--- | :--- |
-| **Admin** | Admin Marine Rangers | `admin@marinerangers.test` | Dinas Lingkungan Hidup Surabaya |
-| **Pemantau** | Koordinator Pemantau | `pemantau@marinerangers.test` | Surabaya Peduli Laut |
-| **Masyarakat** | Budi Relawan | `relawan1@marinerangers.test` | Relawan Warga Pesisir 1 |
-| **Masyarakat** | Siti Relawan | `relawan2@marinerangers.test` | Relawan Warga Pesisir 2 |
+| **Admin** | *Semua Wilayah (Global)* | `admin@marinerangers.test` | Admin DLH Surabaya |
+| **Pemantau** | **Pantai Kenjeran** | `pemantau.kenjeran@marinerangers.test` | Pemantau Kenjeran *(Pokdarwis Kenjeran Bersih)* |
+| **Pemantau** | **Kedung Cowek** | `pemantau.kedungcowek@marinerangers.test` | Pemantau Kedung Cowek *(Forum Mangrove Kedung Cowek)* |
+| **Pemantau** | **Tambak Wedi** | `pemantau.tambakwedi@marinerangers.test` | Pemantau Tambak Wedi *(Komunitas Pesisir Suramadu)* |
+| **Pemantau** | **Pantai Ria Kenjeran** | `pemantau.pantairia@marinerangers.test` | Pemantau Pantai Ria *(Sahabat Lingkungan Pantai Ria)* |
+| **Pemantau** | **Sukolilo Baru** | `pemantau.sukolilo@marinerangers.test` | Pemantau Sukolilo Baru *(Laskar Bahari Nelayan Sukolilo)* |
+| **Masyarakat** | - | `relawan1@marinerangers.test` | Budi Relawan *(Warga Pesisir)* |
+| **Masyarakat** | - | `relawan2@marinerangers.test` | Siti Relawan *(Warga Pesisir)* |
 
 ---
 
 ## 🧪 Menjalankan Automated Test
 
-Untuk memverifikasi integritas database, relasi model Eloquent, default nilai role/status, cascade delete, dan seeder:
+Untuk memverifikasi integritas database, relasi model Eloquent, default nilai role/status, pembatasan akses wilayah pemantau, dan cascade delete:
 ```bash
 php artisan test --testdox
 ```
@@ -103,10 +136,10 @@ php artisan test --testdox
 
 ## 🗄 Struktur & Skema Database
 
-Skema mengacu pada ERD proposal (Gambar 4) dengan penyesuaian primary key kustom:
-- `users` (PK: `id_user`)
-- `kategori` (PK: `id_kategori`)
-- `laporan` (PK: `id_laporan`, FK: `id_user`, `id_kategori`)
-- `pembersihan` (PK: `id_pembersihan`, FK: `id_laporan`, `id_user`)
-- `log_aktivitas` (PK: `id_log`, FK: `id_user`)
-- `dashboard` (PK: `id_dashboard`, FK: `id_user`)
+Skema mengacu pada ERD sistem dengan penyesuaian atribut penugasan wilayah:
+- **`users`** (PK: `id_user`): `nama`, `email`, `password`, `role` (*masyarakat / pemantau / admin*), `organisasi`, **`wilayah_tugas`** *(daerah penugasan khusus pemantau)*
+- **`kategori`** (PK: `id_kategori`): master jenis sampah pesisir
+- **`laporan`** (PK: `id_laporan`, FK: `id_user`, `id_kategori`): koordinat latitude/longitude, foto bukti, deskripsi, waktu insiden, `wilayah`, `status`
+- **`pembersihan`** (PK: `id_pembersihan`, FK: `id_laporan`, `id_user`): dokumentasi hasil tindak lanjut pembersihan sampah di lapangan
+- **`log_aktivitas`** (PK: `id_log`, FK: `id_user`): audit trail setiap aktivitas pengguna di sistem
+- **`dashboard`** (PK: `id_dashboard`, FK: `id_user`): preferensi metrik dasbor

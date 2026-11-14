@@ -90,7 +90,7 @@
                         @if(Auth::user()->isPemantau())
                             <div class="hidden md:flex items-center text-xs text-slate-500 border-l border-slate-200 pl-4 py-1">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>
-                                <span>Komunitas Lingkungan · {{ Auth::user()->organisasi ?? 'Surabaya Peduli Laut' }}</span>
+                                <span>Pemantau {{ Auth::user()->wilayah_tugas ? '· ' . Auth::user()->wilayah_tugas : '' }} · {{ Auth::user()->organisasi ?? 'Komunitas Peduli Laut' }}</span>
                             </div>
                         @elseif(Auth::user()->isAdmin())
                             <div class="hidden md:flex items-center text-xs text-slate-500 border-l border-slate-200 pl-4 py-1">
@@ -173,6 +173,11 @@
                                         {{ Auth::user()->isAdmin() ? 'bg-indigo-100 text-indigo-700' : (Auth::user()->isPemantau() ? 'bg-emerald-100 text-emerald-700' : 'bg-sky-100 text-sky-700') }}">
                                         {{ ucfirst(Auth::user()->role) }}
                                     </span>
+                                    @if(Auth::user()->isPemantau() && Auth::user()->wilayah_tugas)
+                                        <span class="inline-block mt-1 ml-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                            {{ Auth::user()->wilayah_tugas }}
+                                        </span>
+                                    @endif
                                 </div>
 
                                 <a href="{{ route('dashboard') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
