@@ -33,6 +33,9 @@ Route::middleware('auth')->group(function () {
     // Dashboard Redirect berdasarkan role
     Route::get('/dashboard', [AuthController::class, 'dashboard'])->name('dashboard');
 
+    // Daftar / Riwayat Laporan (Mengakses LaporanController@index)
+    Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
+
     // Halaman Lapor (Khusus Masyarakat)
     Route::middleware('role:masyarakat')->group(function () {
         Route::get('/lapor', [LaporanController::class, 'create'])->name('lapor');

@@ -14,6 +14,45 @@ use Illuminate\View\View;
 class LaporanController extends Controller
 {
     /**
+     * Tampilkan daftar riwayat laporan (untuk masyarakat, pemantau, atau admin).
+     */
+    public function index(Request $request): View
+    {
+        $user = auth()->user();
+
+        // Jika user adalah masyarakat biasa, hanya tampilkan laporan miliknya sendiri (Riwayat Laporan)
+        if ($user && method_exists($user, 'isMasyarakat') && $user->isMasyarakat()) {
+            $laporans = Laporan::with(['kategori', 'pembersihan'])
+                ->where('id_user', $user->id)
+                ->latest('waktu_laporan')
+                ->paginate(10);
+        } 
+        // Jika pemantau wilayah, tampilkan laporan sesuai wilayah tugasnya
+        elseif ($user && method_exists($user, 'isPemantau') && $user->isPemantau()) {
+            $laporans = Laporan::with(['user', 'kategori', 'pembersihan'])
+                ->where('wilayah', $user->wilayah_tugas)
+                ->latest('waktu_laporan')
+                ->paginate(10);
+        } 
+        // Jika Admin atau peran lainnya, tampilkan seluruh laporan dengan opsi filter pencarian jika ada
+        else {
+            $query = Laporan::with(['user', 'kategori', 'pembersihan']);
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('wilayah')) {
+                $query->where('wilayah', 'like', '%' . $request->wilayah . '%');
+            }
+
+            $laporans = $query->latest('waktu_laporan')->paginate(10);
+        }
+
+        return view('lapor.index', compact('laporans'));
+    }
+
+    /**
      * Tampilkan form buat laporan (khusus masyarakat).
      */
     public function create(): View
@@ -52,7 +91,7 @@ class LaporanController extends Controller
         $laporan = Laporan::with(['user', 'kategori', 'pembersihan.user'])->findOrFail($id);
 
         $user = auth()->user();
-        if ($user && $user->isPemantau() && !$user->canAccessWilayah($laporan->wilayah)) {
+        if ($user && method_exists($user, 'isPemantau') && $user->isPemantau() && method_exists($user, 'canAccessWilayah') && !$user->canAccessWilayah($laporan->wilayah)) {
             abort(403, 'Akses Dibatasi: Anda terdaftar sebagai Pemantau wilayah ' . ($user->wilayah_tugas ?? '-') . ' dan hanya diizinkan mengakses laporan di wilayah tugas Anda.');
         }
 
@@ -66,13 +105,13 @@ class LaporanController extends Controller
     public function updateStatus(Request $request, int|string $id): RedirectResponse
     {
         $user = auth()->user();
-        if (!$user || !$user->isPemantau()) {
+        if (!$user || !method_exists($user, 'isPemantau') || !$user->isPemantau()) {
             abort(403, 'Akses Dibatasi: Hanya Pemantau Wilayah yang memiliki wewenang untuk mengubah status operasional laporan.');
         }
 
         $laporan = Laporan::findOrFail($id);
 
-        if (!$user->canAccessWilayah($laporan->wilayah)) {
+        if (method_exists($user, 'canAccessWilayah') && !$user->canAccessWilayah($laporan->wilayah)) {
             abort(403, 'Akses Dibatasi: Anda tidak dapat mengubah status laporan di luar wilayah tugas Anda (' . ($user->wilayah_tugas ?? '-') . ').');
         }
 
@@ -95,13 +134,13 @@ class LaporanController extends Controller
     public function tindakLanjut(Request $request, int|string $id): RedirectResponse
     {
         $user = auth()->user();
-        if (!$user || !$user->isPemantau()) {
+        if (!$user || !method_exists($user, 'isPemantau') || !$user->isPemantau()) {
             abort(403, 'Akses Dibatasi: Hanya Pemantau Wilayah yang memiliki wewenang untuk menyelesaikan aksi pembersihan.');
         }
 
         $laporan = Laporan::findOrFail($id);
 
-        if (!$user->canAccessWilayah($laporan->wilayah)) {
+        if (method_exists($user, 'canAccessWilayah') && !$user->canAccessWilayah($laporan->wilayah)) {
             abort(403, 'Akses Dibatasi: Anda tidak dapat menyelesaikan aksi pembersihan pada laporan di luar wilayah tugas Anda (' . ($user->wilayah_tugas ?? '-') . ').');
         }
 
