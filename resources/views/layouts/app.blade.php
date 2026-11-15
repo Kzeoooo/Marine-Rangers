@@ -117,15 +117,27 @@
                             <a href="{{ route('lapor') }}" class="transition-colors hover:text-[#004d6d] {{ request()->routeIs('lapor') ? 'text-[#004d6d] font-semibold' : '' }}">
                                 Lapor Sampah
                             </a>
-                        @endif
-                        <a href="{{ route('peta') }}" class="transition-colors hover:text-[#004d6d] {{ request()->routeIs('peta') ? 'text-[#004d6d] font-semibold' : '' }}">
-                            Peta
-                        </a>
-                        @if(Auth::user()->isAdmin())
+                            <a href="{{ route('laporan.index') }}" class="transition-colors hover:text-[#004d6d] {{ request()->routeIs('laporan.index') ? 'text-[#004d6d] font-semibold' : '' }}">
+                                Laporan Saya
+                            </a>
+                        @elseif(Auth::user()->isPemantau())
+                            <a href="{{ route('laporan.index') }}" class="transition-colors hover:text-[#004d6d] {{ request()->routeIs('laporan.index') ? 'text-[#004d6d] font-semibold' : '' }}">
+                                Tugas Masuk
+                            </a>
+                        @elseif(Auth::user()->isAdmin())
+                            <a href="{{ route('laporan.index') }}" class="transition-colors hover:text-[#004d6d] {{ request()->routeIs('laporan.index') ? 'text-[#004d6d] font-semibold' : '' }}">
+                                Kelola Laporan
+                            </a>
+                            <a href="{{ route('admin.users.index') }}" class="transition-colors hover:text-[#004d6d] {{ request()->routeIs('admin.users.*') ? 'text-[#004d6d] font-semibold' : '' }}">
+                                Kelola Pengguna
+                            </a>
                             <a href="{{ route('admin') }}" class="transition-colors hover:text-[#004d6d] {{ request()->routeIs('admin') ? 'text-[#004d6d] font-semibold' : '' }}">
                                 Panel Admin
                             </a>
                         @endif
+                        <a href="{{ route('peta') }}" class="transition-colors hover:text-[#004d6d] {{ request()->routeIs('peta') ? 'text-[#004d6d] font-semibold' : '' }}">
+                            Peta
+                        </a>
                     @else
                         <a href="{{ route('login') }}" class="transition-colors hover:text-[#004d6d]">
                             Lapor Sampah
@@ -189,12 +201,23 @@
                                 </a>
 
                                 @if(Auth::user()->isMasyarakat())
+                                    <a href="{{ route('laporan.index') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                        Laporan Saya
+                                    </a>
                                     <a href="{{ route('lapor') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
                                         Buat Laporan Baru
                                     </a>
-                                @endif
-
-                                @if(Auth::user()->isAdmin())
+                                @elseif(Auth::user()->isPemantau())
+                                    <a href="{{ route('laporan.index') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                        Tugas Masuk
+                                    </a>
+                                @elseif(Auth::user()->isAdmin())
+                                    <a href="{{ route('laporan.index') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                        Kelola Laporan
+                                    </a>
+                                    <a href="{{ route('admin.users.index') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
+                                        Kelola Akun Pengguna
+                                    </a>
                                     <a href="{{ route('admin') }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">
                                         Panel Admin Sistem
                                     </a>

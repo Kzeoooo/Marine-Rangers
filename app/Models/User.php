@@ -111,6 +111,23 @@ class User extends Authenticatable
             || stripos($this->wilayah_tugas, $wilayah) !== false;
     }
 
+    /**
+     * Terapkan filter wilayah laporan pada Query Builder sesuai aturan canAccessWilayah().
+     * Menjadi satu sumber aturan bersama canAccessWilayah().
+     */
+    public function applyWilayahAccess($query)
+    {
+        if ($this->isAdmin() || !$this->isPemantau()) {
+            return $query;
+        }
+
+        if (empty($this->wilayah_tugas)) {
+            return $query;
+        }
+
+        return $query->where('wilayah', 'like', '%' . $this->wilayah_tugas . '%');
+    }
+
     // Relasi Eloquent
     public function laporan(): HasMany
     {

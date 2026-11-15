@@ -9,6 +9,7 @@ use App\Models\Laporan;
 use App\Models\Pembersihan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class LaporanController extends Controller
@@ -20,24 +21,42 @@ class LaporanController extends Controller
     {
         $user = auth()->user();
 
-        // Jika user adalah masyarakat biasa, hanya tampilkan laporan miliknya sendiri (Riwayat Laporan)
-        if ($user && method_exists($user, 'isMasyarakat') && $user->isMasyarakat()) {
-            $laporans = Laporan::with(['kategori', 'pembersihan'])
-                ->where('id_user', $user->id)
-                ->latest('waktu_laporan')
-                ->paginate(10);
-        } 
-        // Jika pemantau wilayah, tampilkan laporan sesuai wilayah tugasnya
-        elseif ($user && method_exists($user, 'isPemantau') && $user->isPemantau()) {
-            $laporans = Laporan::with(['user', 'kategori', 'pembersihan'])
-                ->where('wilayah', $user->wilayah_tugas)
-                ->latest('waktu_laporan')
-                ->paginate(10);
-        } 
-        // Jika Admin atau peran lainnya, tampilkan seluruh laporan dengan opsi filter pencarian jika ada
-        else {
-            $query = Laporan::with(['user', 'kategori', 'pembersihan']);
+        $query = Laporan::with(['user', 'kategori', 'pembersihan']);
 
+        // 1. Masyarakat: hanya melihat laporan miliknya sendiri
+        if ($user->isMasyarakat()) {
+            $query->where('id_user', $user->id_user);
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            $availableStatuses = Laporan::STATUSES;
+            $selectedStatus = $request->input('status');
+        } 
+        // 2. Pemantau: hanya melihat laporan di wilayah tugasnya dengan status dipantau, ditindaklanjuti, dan selesai (BUKAN baru)
+        elseif ($user->isPemantau()) {
+            $allowedStatuses = [
+                Laporan::STATUS_DIPANTAU,
+                Laporan::STATUS_DITINDAKLANJUTI,
+                Laporan::STATUS_SELESAI,
+            ];
+
+            // Terapkan batasan wilayah tugas dari User model (satu sumber aturan)
+            $user->applyWilayahAccess($query);
+
+            // Filter status: pemantau memfilter di antara status yang boleh dilihatnya
+            if ($request->filled('status') && in_array($request->status, $allowedStatuses, true)) {
+                $query->where('status', $request->status);
+            } else {
+                $query->whereIn('status', $allowedStatuses);
+            }
+
+            $availableStatuses = $allowedStatuses;
+            $selectedStatus = $request->input('status');
+        } 
+        // 3. Admin: melihat seluruh laporan dengan filter status lengkap (baru, dipantau, ditindaklanjuti, selesai)
+        else {
             if ($request->filled('status')) {
                 $query->where('status', $request->status);
             }
@@ -46,10 +65,13 @@ class LaporanController extends Controller
                 $query->where('wilayah', 'like', '%' . $request->wilayah . '%');
             }
 
-            $laporans = $query->latest('waktu_laporan')->paginate(10);
+            $availableStatuses = Laporan::STATUSES;
+            $selectedStatus = $request->input('status');
         }
 
-        return view('lapor.index', compact('laporans'));
+        $laporans = $query->latest('waktu_laporan')->paginate(10)->withQueryString();
+
+        return view('lapor.index', compact('laporans', 'availableStatuses', 'selectedStatus'));
     }
 
     /**
@@ -80,7 +102,123 @@ class LaporanController extends Controller
 
         LogAktivitasHelper::catat(auth()->id(), 'Mengirimkan laporan insiden baru di wilayah: ' . $laporan->wilayah);
 
-        return redirect()->route('lapor')->with('success', 'Laporan berhasil dikirim dan sedang ditinjau.');
+        return redirect()->route('laporan.index')->with('success', 'Laporan berhasil dikirim dan sedang ditinjau.');
+    }
+
+    /**
+     * Tampilkan formulir edit laporan (khusus relawan pemilik laporan atau admin).
+     * Hanya dapat diedit selama laporan berstatus 'baru'.
+     */
+    public function edit(int|string $id): View|RedirectResponse
+    {
+        $laporan = Laporan::with('kategori')->findOrFail($id);
+        $user = auth()->user();
+
+        // Verifikasi kepemilikan
+        if (!$user->isAdmin() && $laporan->id_user !== $user->id_user) {
+            abort(403, 'Anda tidak memiliki hak untuk mengedit laporan milik pengguna lain.');
+        }
+
+        // Laporan hanya boleh diedit jika masih berstatus 'baru'
+        if (!$laporan->isBaru()) {
+            return redirect()->route('laporan.index')
+                ->with('error', 'Laporan yang telah diverifikasi (dipantau) atau sedang ditindaklanjuti tidak dapat diedit kembali.');
+        }
+
+        $kategoris = Kategori::all();
+
+        return view('lapor.edit', compact('laporan', 'kategoris'));
+    }
+
+    /**
+     * Perbarui laporan insiden di database.
+     */
+    public function update(Request $request, int|string $id): RedirectResponse
+    {
+        $laporan = Laporan::findOrFail($id);
+        $user = auth()->user();
+
+        // Verifikasi kepemilikan
+        if (!$user->isAdmin() && $laporan->id_user !== $user->id_user) {
+            abort(403, 'Anda tidak memiliki hak untuk memperbarui laporan milik pengguna lain.');
+        }
+
+        // Laporan hanya boleh diubah jika masih berstatus 'baru'
+        if (!$laporan->isBaru()) {
+            return redirect()->route('laporan.index')
+                ->with('error', 'Laporan yang telah diverifikasi atau sedang ditindaklanjuti tidak dapat diubah kembali.');
+        }
+
+        $validated = $request->validate([
+            'id_kategori' => ['required', 'exists:kategori,id_kategori'],
+            'wilayah' => ['required', 'string', 'max:100'],
+            'deskripsi' => ['nullable', 'string'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            'foto' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ], [
+            'id_kategori.required' => 'Kategori sampah wajib dipilih.',
+            'id_kategori.exists' => 'Kategori yang dipilih tidak valid.',
+            'wilayah.required' => 'Wilayah laporan wajib diisi.',
+            'latitude.required' => 'Koordinat latitude wajib ada.',
+            'longitude.required' => 'Koordinat longitude wajib ada.',
+            'foto.image' => 'File yang diunggah harus berupa gambar.',
+            'foto.max' => 'Ukuran foto maksimal 5MB.',
+        ]);
+
+        if ($request->hasFile('foto')) {
+            // Hapus foto lama jika tersimpan di disk public
+            if ($laporan->foto && Storage::disk('public')->exists($laporan->foto)) {
+                Storage::disk('public')->delete($laporan->foto);
+            }
+            $validated['foto'] = $request->file('foto')->store('laporan', 'public');
+        }
+
+        $laporan->update($validated);
+
+        LogAktivitasHelper::catat(
+            auth()->id(),
+            'Memperbarui laporan insiden #' . $laporan->id_laporan . ' di wilayah: ' . $laporan->wilayah
+        );
+
+        return redirect()->route('laporan.index')->with('success', 'Laporan berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus / batalkan laporan (khusus relawan pemilik laporan atau admin).
+     * Hanya dapat dihapus selama laporan berstatus 'baru'.
+     */
+    public function destroy(int|string $id): RedirectResponse
+    {
+        $laporan = Laporan::findOrFail($id);
+        $user = auth()->user();
+
+        // Verifikasi kepemilikan
+        if (!$user->isAdmin() && $laporan->id_user !== $user->id_user) {
+            abort(403, 'Anda tidak memiliki hak untuk menghapus laporan milik pengguna lain.');
+        }
+
+        // Laporan hanya boleh dihapus jika masih berstatus 'baru'
+        if (!$laporan->isBaru()) {
+            return redirect()->route('laporan.index')
+                ->with('error', 'Laporan yang telah diverifikasi atau sedang ditindaklanjuti tidak dapat dihapus.');
+        }
+
+        $idLaporan = $laporan->id_laporan;
+        $wilayah = $laporan->wilayah;
+
+        if ($laporan->foto && Storage::disk('public')->exists($laporan->foto)) {
+            Storage::disk('public')->delete($laporan->foto);
+        }
+
+        $laporan->delete();
+
+        LogAktivitasHelper::catat(
+            auth()->id(),
+            'Menghapus laporan insiden #' . $idLaporan . ' di wilayah: ' . $wilayah
+        );
+
+        return redirect()->route('laporan.index')->with('success', 'Laporan #' . $idLaporan . ' berhasil dihapus.');
     }
 
     /**
@@ -91,7 +229,7 @@ class LaporanController extends Controller
         $laporan = Laporan::with(['user', 'kategori', 'pembersihan.user'])->findOrFail($id);
 
         $user = auth()->user();
-        if ($user && method_exists($user, 'isPemantau') && $user->isPemantau() && method_exists($user, 'canAccessWilayah') && !$user->canAccessWilayah($laporan->wilayah)) {
+        if ($user && $user->isPemantau() && !$user->canAccessWilayah($laporan->wilayah)) {
             abort(403, 'Akses Dibatasi: Anda terdaftar sebagai Pemantau wilayah ' . ($user->wilayah_tugas ?? '-') . ' dan hanya diizinkan mengakses laporan di wilayah tugas Anda.');
         }
 
@@ -105,13 +243,13 @@ class LaporanController extends Controller
     public function updateStatus(Request $request, int|string $id): RedirectResponse
     {
         $user = auth()->user();
-        if (!$user || !method_exists($user, 'isPemantau') || !$user->isPemantau()) {
+        if (!$user || !$user->isPemantau()) {
             abort(403, 'Akses Dibatasi: Hanya Pemantau Wilayah yang memiliki wewenang untuk mengubah status operasional laporan.');
         }
 
         $laporan = Laporan::findOrFail($id);
 
-        if (method_exists($user, 'canAccessWilayah') && !$user->canAccessWilayah($laporan->wilayah)) {
+        if (!$user->canAccessWilayah($laporan->wilayah)) {
             abort(403, 'Akses Dibatasi: Anda tidak dapat mengubah status laporan di luar wilayah tugas Anda (' . ($user->wilayah_tugas ?? '-') . ').');
         }
 
@@ -134,13 +272,13 @@ class LaporanController extends Controller
     public function tindakLanjut(Request $request, int|string $id): RedirectResponse
     {
         $user = auth()->user();
-        if (!$user || !method_exists($user, 'isPemantau') || !$user->isPemantau()) {
+        if (!$user || !$user->isPemantau()) {
             abort(403, 'Akses Dibatasi: Hanya Pemantau Wilayah yang memiliki wewenang untuk menyelesaikan aksi pembersihan.');
         }
 
         $laporan = Laporan::findOrFail($id);
 
-        if (method_exists($user, 'canAccessWilayah') && !$user->canAccessWilayah($laporan->wilayah)) {
+        if (!$user->canAccessWilayah($laporan->wilayah)) {
             abort(403, 'Akses Dibatasi: Anda tidak dapat menyelesaikan aksi pembersihan pada laporan di luar wilayah tugas Anda (' . ($user->wilayah_tugas ?? '-') . ').');
         }
 

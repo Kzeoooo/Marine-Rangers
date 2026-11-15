@@ -26,7 +26,8 @@ Proyek Tugas Besar Mata Kuliah **Pengembangan Perangkat Lunak (PPL)** dengan met
    - Statistik operasional (Total Laporan, Laporan Aktif, Persentase Tindak Lanjut) terhitung secara lokal untuk area pemantau terkait.
    - **Wewenang Eksklusif Pengubahan Status**: Hanya pemantau wilayah yang berhak mengubah tahapan status laporan (*Dipantau* ➔ *Ditindaklanjuti* ➔ *Selesai*) untuk menjaga integritas fakta lapangan.
    - Proteksi otorisasi berlapis (HTTP 403 Forbidden) mencegah akses dan aksi di luar wilayah kewenangan.
-3. **Panel Kontrol Administrator (Dinas Lingkungan Hidup)**:
+3. **Panel Kontrol Administrator & Manajemen Pengguna (Dinas Lingkungan Hidup)**:
+   - **Kelola Akun Pengguna (`/admin/pengguna`)**: Administrator dapat mengelola seluruh akun pengguna sistem (Admin, Pemantau Wilayah, Relawan Masyarakat), mendaftarkan pemantau baru lengkap dengan penetapan `wilayah_tugas`, memperbarui profil dan peran, serta menghapus akun secara aman.
    - Pengawasan menyeluruh (*monitoring & audit trail*) seluruh titik wilayah pesisir tanpa batasan area (mode pengawasan read-only pada detail laporan).
    - Pemantauan aktivitas sistem, rekapitulasi akun pengguna, dan penugasan wilayah pemantau.
 4. **Alur Status Laporan & Konfirmasi Pembersihan**:

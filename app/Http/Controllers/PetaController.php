@@ -40,7 +40,7 @@ class PetaController extends Controller
 
         // Batasi wilayah jika pemantau
         if ($isPemantauWilayah) {
-            $query->where('wilayah', 'like', '%' . $wilayahTugasPemantau . '%');
+            $user->applyWilayahAccess($query);
             $wilayahFilter = $wilayahTugasPemantau;
         } else {
             // Filter Wilayah untuk Admin & Masyarakat

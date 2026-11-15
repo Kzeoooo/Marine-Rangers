@@ -20,6 +20,12 @@
         </div>
 
         <div class="flex items-center gap-3">
+            <a href="{{ route('admin.users.index') }}" class="btn-primary px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                <span>Kelola Akun Pengguna</span>
+            </a>
             <a href="{{ route('peta') }}" class="btn-outline-primary px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
@@ -49,11 +55,14 @@
             <span class="text-xs text-slate-500 mt-1 block">Telah dibersihkan</span>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 block mb-1">Total Akun Pengguna</span>
+        <a href="{{ route('admin.users.index') }}" class="group bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 hover:border-indigo-300 transition-all block">
+            <div class="flex items-center justify-between">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 block mb-1">Total Akun Pengguna</span>
+                <span class="text-[10px] text-indigo-600 font-semibold group-hover:underline">Kelola →</span>
+            </div>
             <div class="font-serif-title text-3xl font-bold text-indigo-700">{{ $totalUsers }}</div>
             <span class="text-xs text-slate-500 mt-1 block">Admin, Pemantau, Warga</span>
-        </div>
+        </a>
     </div>
 
     <!-- Tables Section: 2 Columns on LG -->
@@ -150,9 +159,14 @@
 
             <!-- Users Overview -->
             <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-                <h3 class="text-sm font-bold text-slate-900 pb-3 mb-4 border-b border-slate-100">
-                    Pengguna Terbaru
-                </h3>
+                <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+                    <h3 class="text-sm font-bold text-slate-900">
+                        Pengguna Terbaru
+                    </h3>
+                    <a href="{{ route('admin.users.index') }}" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold">
+                        Kelola Semua →
+                    </a>
+                </div>
 
                 <div class="space-y-3">
                     @foreach($users as $u)

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PetaController;
@@ -45,8 +46,11 @@ Route::middleware('auth')->group(function () {
     // Halaman Peta (Semua pengguna yang sudah login: masyarakat, pemantau, admin)
     Route::get('/peta', [PetaController::class, 'index'])->name('peta');
 
-    // Detail Laporan & Tindak Lanjut (Mockup 4)
+    // Detail, Edit, Update, dan Hapus Laporan
     Route::get('/laporan/{id}', [LaporanController::class, 'show'])->name('laporan.show');
+    Route::get('/laporan/{id}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
+    Route::put('/laporan/{id}', [LaporanController::class, 'update'])->name('laporan.update');
+    Route::delete('/laporan/{id}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
 
     // Aksi Pembersihan dan Update Status (Eksklusif Pemantau Wilayah)
     Route::middleware('role:pemantau')->group(function () {
@@ -54,6 +58,16 @@ Route::middleware('auth')->group(function () {
         Route::post('/laporan/{id}/tindaklanjut', [LaporanController::class, 'tindakLanjut'])->name('laporan.tindaklanjut');
     });
 
-    // Halaman Admin (Khusus Admin)
-    Route::get('/admin', [AdminController::class, 'index'])->middleware('role:admin')->name('admin');
+    // Halaman Admin & Manajemen Pengguna (Khusus Admin)
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin', [AdminController::class, 'index'])->name('admin');
+
+        // Kelola Akun Pengguna
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::get('/pengguna', [AdminUserController::class, 'index'])->name('users.index');
+            Route::post('/pengguna', [AdminUserController::class, 'store'])->name('users.store');
+            Route::put('/pengguna/{id}', [AdminUserController::class, 'update'])->name('users.update');
+            Route::delete('/pengguna/{id}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+        });
+    });
 });

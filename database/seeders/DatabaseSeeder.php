@@ -14,7 +14,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             KategoriSeeder::class, // Master kategori sampah pesisir
             UserSeeder::class,     // Akun demo Admin, Pemantau Daerah, & Relawan
-            LaporanSeeder::class,  // 100+ data laporan dummy realistis pesisir Surabaya & data pembersihan
         ]);
+
+        // LaporanSeeder hanya dieksekusi pada lingkungan testing untuk memenuhi automated tests.
+        // Di lingkungan lokal/production, database diawali dalam kondisi bersih (0 laporan dummy).
+        if (app()->environment('testing')) {
+            $this->call(LaporanSeeder::class);
+        }
     }
 }
