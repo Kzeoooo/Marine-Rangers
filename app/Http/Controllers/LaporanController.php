@@ -7,6 +7,7 @@ use App\Http\Requests\LaporanRequest;
 use App\Models\Kategori;
 use App\Models\Laporan;
 use App\Models\Pembersihan;
+use App\Services\PrioritasService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -22,6 +23,13 @@ class LaporanController extends Controller
         $user = auth()->user();
 
         $query = Laporan::with(['user', 'kategori', 'pembersihan']);
+
+        $availablePrioritas = Laporan::PRIORITAS_LIST;
+        $selectedPrioritas = $request->input('prioritas');
+
+        if ($request->filled('prioritas') && in_array($request->prioritas, Laporan::PRIORITAS_LIST, true)) {
+            $query->where('prioritas', $request->prioritas);
+        }
 
         // 1. Masyarakat: hanya melihat laporan miliknya sendiri
         if ($user->isMasyarakat()) {
@@ -71,7 +79,14 @@ class LaporanController extends Controller
 
         $laporans = $query->latest('waktu_laporan')->paginate(10)->withQueryString();
 
-        return view('lapor.index', compact('laporans', 'availableStatuses', 'selectedStatus'));
+        $statCounts = [
+            'total' => Laporan::count(),
+            'baru' => Laporan::where('status', Laporan::STATUS_BARU)->count(),
+            'dipantau' => Laporan::whereIn('status', [Laporan::STATUS_DIPANTAU, Laporan::STATUS_DITINDAKLANJUTI])->count(),
+            'selesai' => Laporan::where('status', Laporan::STATUS_SELESAI)->count(),
+        ];
+
+        return view('lapor.index', compact('laporans', 'availableStatuses', 'selectedStatus', 'availablePrioritas', 'selectedPrioritas', 'statCounts'));
     }
 
     /**
@@ -92,6 +107,17 @@ class LaporanController extends Controller
         $validated['id_user'] = auth()->id();
         $validated['waktu_laporan'] = now('Asia/Jakarta');
         $validated['status'] = Laporan::STATUS_BARU;
+
+        // Hitung Prioritas & Skor Otomatis berdasarkan Skema Penilaian
+        $hasilPrioritas = PrioritasService::hitung(
+            $validated['id_kategori'],
+            $validated['deskripsi'] ?? null,
+            isset($validated['latitude']) ? (float) $validated['latitude'] : null,
+            isset($validated['longitude']) ? (float) $validated['longitude'] : null
+        );
+
+        $validated['prioritas'] = $hasilPrioritas['prioritas'];
+        $validated['skor_prioritas'] = $hasilPrioritas['skor'];
 
         if ($request->hasFile('foto')) {
             $path = $request->file('foto')->store('laporan', 'public');
@@ -173,6 +199,17 @@ class LaporanController extends Controller
             }
             $validated['foto'] = $request->file('foto')->store('laporan', 'public');
         }
+
+        // Hitung ulang prioritas berdasarkan perubahan data
+        $hasilPrioritas = PrioritasService::hitung(
+            $validated['id_kategori'],
+            $validated['deskripsi'] ?? null,
+            isset($validated['latitude']) ? (float) $validated['latitude'] : null,
+            isset($validated['longitude']) ? (float) $validated['longitude'] : null
+        );
+
+        $validated['prioritas'] = $hasilPrioritas['prioritas'];
+        $validated['skor_prioritas'] = $hasilPrioritas['skor'];
 
         $laporan->update($validated);
 
@@ -305,5 +342,37 @@ class LaporanController extends Controller
         LogAktivitasHelper::catat(auth()->id(), 'Menyelesaikan aksi pembersihan untuk laporan #' . $laporan->id_laporan . ' di ' . $laporan->wilayah);
 
         return back()->with('success', 'Aksi pembersihan berhasil dikonfirmasi! Laporan kini berstatus Selesai.');
+    }
+
+    /**
+     * Kalibrasi tingkat prioritas laporan.
+     * Dapat dilakukan oleh Pemantau Wilayah penugasan atau Administrator.
+     */
+    public function updatePrioritas(Request $request, int|string $id): RedirectResponse
+    {
+        $user = auth()->user();
+        if (!$user || (!$user->isPemantau() && !$user->isAdmin())) {
+            abort(403, 'Akses Dibatasi: Hanya Pemantau Wilayah atau Administrator yang berwenang mengkalibrasi tingkat prioritas.');
+        }
+
+        $laporan = Laporan::findOrFail($id);
+
+        if ($user->isPemantau() && !$user->canAccessWilayah($laporan->wilayah)) {
+            abort(403, 'Akses Dibatasi: Anda tidak dapat mengubah prioritas laporan di luar wilayah tugas Anda (' . ($user->wilayah_tugas ?? '-') . ').');
+        }
+
+        $request->validate([
+            'prioritas' => 'required|in:' . implode(',', Laporan::PRIORITAS_LIST),
+        ]);
+
+        $prioritasBaru = $request->input('prioritas');
+        $laporan->update(['prioritas' => $prioritasBaru]);
+
+        LogAktivitasHelper::catat(
+            auth()->id(),
+            'Mengkalibrasi tingkat prioritas laporan #' . $laporan->id_laporan . ' menjadi: ' . ucfirst($prioritasBaru)
+        );
+
+        return back()->with('success', 'Tingkat prioritas laporan berhasil diubah menjadi ' . ucfirst($prioritasBaru) . '.');
     }
 }

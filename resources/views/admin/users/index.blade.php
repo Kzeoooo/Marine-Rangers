@@ -37,27 +37,27 @@
 
     <!-- 4 Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Pengguna</span>
-            <div class="font-serif-title text-3xl font-bold text-slate-900">{{ $totalUsers }}</div>
+        <div class="bg-gradient-to-br from-sky-50/70 via-white to-white rounded-2xl border border-sky-100 border-l-4 border-l-sky-600 shadow-sm p-6 hover:shadow-md transition-all">
+            <span class="text-xs font-bold uppercase tracking-wider text-sky-700 block mb-1">Total Pengguna</span>
+            <div class="font-serif-title text-3xl font-extrabold text-slate-900 tabular-nums">{{ $totalUsers }}</div>
             <span class="text-xs text-slate-500 mt-1 block">Semua akun terdaftar</span>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 block mb-1">Administrator</span>
-            <div class="font-serif-title text-3xl font-bold text-indigo-700">{{ $totalAdmin }}</div>
+        <div class="bg-gradient-to-br from-indigo-50/70 via-white to-white rounded-2xl border border-indigo-100 border-l-4 border-l-indigo-600 shadow-sm p-6 hover:shadow-md transition-all">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-700 block mb-1">Administrator</span>
+            <div class="font-serif-title text-3xl font-extrabold text-indigo-700 tabular-nums">{{ $totalAdmin }}</div>
             <span class="text-xs text-slate-500 mt-1 block">Akses penuh sistem</span>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 block mb-1">Pemantau Wilayah</span>
-            <div class="font-serif-title text-3xl font-bold text-emerald-600">{{ $totalPemantau }}</div>
+        <div class="bg-gradient-to-br from-emerald-50/70 via-white to-white rounded-2xl border border-emerald-100 border-l-4 border-l-emerald-600 shadow-sm p-6 hover:shadow-md transition-all">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 block mb-1">Pemantau Wilayah</span>
+            <div class="font-serif-title text-3xl font-extrabold text-emerald-600 tabular-nums">{{ $totalPemantau }}</div>
             <span class="text-xs text-slate-500 mt-1 block">Petugas lapangan pesisir</span>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-sky-600 block mb-1">Relawan Masyarakat</span>
-            <div class="font-serif-title text-3xl font-bold text-sky-600">{{ $totalMasyarakat }}</div>
+        <div class="bg-gradient-to-br from-teal-50/70 via-white to-white rounded-2xl border border-teal-100 border-l-4 border-l-teal-600 shadow-sm p-6 hover:shadow-md transition-all">
+            <span class="text-xs font-bold uppercase tracking-wider text-teal-700 block mb-1">Relawan Masyarakat</span>
+            <div class="font-serif-title text-3xl font-extrabold text-teal-700 tabular-nums">{{ $totalMasyarakat }}</div>
             <span class="text-xs text-slate-500 mt-1 block">Warga pelapor sampah</span>
         </div>
     </div>
@@ -254,7 +254,7 @@
 
 <!-- Modal Tambah Pengguna Baru -->
 <div id="add-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto modal-anim">
         <button type="button" onclick="closeAddModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -262,7 +262,7 @@
         </button>
 
         <h3 class="font-serif-title text-xl font-bold text-slate-900 mb-1">Tambah Pengguna Baru</h3>
-        <p class="text-xs text-slate-500 mb-6">Daftarkan akun administrator, pemantau wilayah pantai, atau masyarakat.</p>
+        <p class="text-xs text-slate-500 mb-6">Daftarkan akun administrator, pemantau wilayah pesisir se-Indonesia, atau masyarakat.</p>
 
         <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-4">
             @csrf
@@ -296,16 +296,29 @@
             </div>
 
             <div id="add-wilayah-container" class="space-y-1.5 {{ old('role') === 'pemantau' ? '' : 'hidden' }}">
-                <label class="block text-xs font-bold uppercase tracking-wider text-emerald-700">
-                    Wilayah Tugas Pemantau
-                </label>
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-emerald-700">
+                        Wilayah Tugas Pemantau (Nusantara)
+                    </label>
+                    <span class="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-medium">Seluruh Indonesia</span>
+                </div>
                 <select name="wilayah_tugas" class="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 focus:border-emerald-600 focus:ring focus:ring-emerald-200 text-xs sm:text-sm text-slate-700">
-                    <option value="">-- Pilih Wilayah Tugas Pantai --</option>
-                    @foreach($daftarWilayah as $dw)
-                        <option value="{{ $dw }}" {{ old('wilayah_tugas') === $dw ? 'selected' : '' }}>{{ $dw }}</option>
-                    @endforeach
+                    <option value="">-- Pilih Wilayah Tugas Pantai (Seluruh Indonesia) --</option>
+                    @if(isset($zonaWilayah) && is_array($zonaWilayah))
+                        @foreach($zonaWilayah as $namaZona => $pantaiList)
+                            <optgroup label="{{ $namaZona }}">
+                                @foreach($pantaiList as $namaPantai => $coord)
+                                    <option value="{{ $namaPantai }}" {{ old('wilayah_tugas') === $namaPantai ? 'selected' : '' }}>{{ $namaPantai }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    @else
+                        @foreach($daftarWilayah as $dw)
+                            <option value="{{ $dw }}" {{ old('wilayah_tugas') === $dw ? 'selected' : '' }}>{{ $dw }}</option>
+                        @endforeach
+                    @endif
                 </select>
-                <p class="text-[11px] text-slate-400">Pemantau hanya dapat melihat dan menindaklanjuti laporan di wilayah ini.</p>
+                <p class="text-[11px] text-slate-400">Pemantau hanya dapat melihat dan menindaklanjuti laporan di wilayah pesisir yang ditugaskan.</p>
             </div>
 
             <div>
@@ -328,7 +341,7 @@
 
 <!-- Modal Edit Pengguna -->
 <div id="edit-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto modal-anim">
         <button type="button" onclick="closeEditModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -376,16 +389,29 @@
             </div>
 
             <div id="edit-wilayah-container" class="space-y-1.5">
-                <label class="block text-xs font-bold uppercase tracking-wider text-emerald-700">
-                    Wilayah Tugas Pemantau
-                </label>
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-emerald-700">
+                        Wilayah Tugas Pemantau (Nusantara)
+                    </label>
+                    <span class="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-medium">Seluruh Indonesia</span>
+                </div>
                 <select name="wilayah_tugas" id="edit-wilayah-select" class="w-full px-3.5 py-2.5 rounded-xl border border-emerald-300 focus:border-emerald-600 focus:ring focus:ring-emerald-200 text-xs sm:text-sm text-slate-700">
-                    <option value="">-- Pilih Wilayah Tugas Pantai --</option>
-                    @foreach($daftarWilayah as $dw)
-                        <option value="{{ $dw }}">{{ $dw }}</option>
-                    @endforeach
+                    <option value="">-- Pilih Wilayah Tugas Pantai (Seluruh Indonesia) --</option>
+                    @if(isset($zonaWilayah) && is_array($zonaWilayah))
+                        @foreach($zonaWilayah as $namaZona => $pantaiList)
+                            <optgroup label="{{ $namaZona }}">
+                                @foreach($pantaiList as $namaPantai => $coord)
+                                    <option value="{{ $namaPantai }}">{{ $namaPantai }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    @else
+                        @foreach($daftarWilayah as $dw)
+                            <option value="{{ $dw }}">{{ $dw }}</option>
+                        @endforeach
+                    @endif
                 </select>
-                <p class="text-[11px] text-slate-400">Pemantau hanya dapat melihat dan menindaklanjuti laporan di wilayah ini.</p>
+                <p class="text-[11px] text-slate-400">Pemantau hanya dapat melihat dan menindaklanjuti laporan di wilayah pesisir yang ditugaskan.</p>
             </div>
 
             <div>
@@ -408,7 +434,7 @@
 
 <!-- Modal Konfirmasi Hapus -->
 <div id="delete-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative modal-anim">
         <div class="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-4">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>

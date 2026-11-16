@@ -46,7 +46,7 @@
                     </a>
                 </div>
 
-                <form action="{{ route('peta') }}" method="GET" class="space-y-6">
+                <form id="filter-peta-form" action="{{ route('peta') }}" method="GET" class="space-y-6">
                     <!-- JENIS SAMPAH (Mockup 5) -->
                     <div>
                         <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-3">
@@ -71,11 +71,16 @@
                         </div>
                     </div>
 
-                    <!-- WILAYAH (Mockup 5) -->
+                    <!-- WILAYAH (Mockup 5 & Seluruh Indonesia) -->
                     <div>
-                        <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
-                            WILAYAH
-                        </span>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                WILAYAH
+                            </span>
+                            @if(!$isPemantauWilayah)
+                                <span class="text-[10px] text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded font-medium">Nusantara</span>
+                            @endif
+                        </div>
                         @if($isPemantauWilayah)
                             <div class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-700 flex items-center justify-between">
                                 <span class="font-medium text-slate-800">{{ $wilayahTugasPemantau }}</span>
@@ -87,14 +92,42 @@
                                 name="wilayah" 
                                 class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#004d6d]/20 focus:border-[#004d6d] bg-white cursor-pointer"
                             >
-                                <option value="semua" {{ $wilayahFilter === 'semua' ? 'selected' : '' }}>Surabaya, Jawa Timur (Semua)</option>
-                                @foreach($daftarWilayah as $wil)
-                                    <option value="{{ $wil }}" {{ $wilayahFilter === $wil ? 'selected' : '' }}>
-                                        {{ $wil }}
-                                    </option>
-                                @endforeach
+                                <option value="semua" {{ $wilayahFilter === 'semua' ? 'selected' : '' }}>Semua Pesisir Nusantara</option>
+                                @if(isset($zonaWilayah) && is_array($zonaWilayah))
+                                    @foreach($zonaWilayah as $namaZona => $pantaiList)
+                                        <optgroup label="{{ $namaZona }}">
+                                            @foreach($pantaiList as $namaPantai => $coord)
+                                                <option value="{{ $namaPantai }}" {{ $wilayahFilter === $namaPantai ? 'selected' : '' }}>
+                                                    {{ $namaPantai }}
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
+                                    @endforeach
+                                @else
+                                    @foreach($daftarWilayah as $wil)
+                                        <option value="{{ $wil }}" {{ $wilayahFilter === $wil ? 'selected' : '' }}>
+                                            {{ $wil }}
+                                        </option>
+                                    @endforeach
+                                @endif
                             </select>
                         @endif
+                    </div>
+
+                    <!-- TINGKAT PRIORITAS -->
+                    <div>
+                        <span class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2">
+                            TINGKAT PRIORITAS
+                        </span>
+                        <select 
+                            name="prioritas" 
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#004d6d]/20 focus:border-[#004d6d] bg-white cursor-pointer"
+                        >
+                            <option value="">Semua Tingkat Prioritas</option>
+                            <option value="tinggi" {{ request('prioritas') === 'tinggi' ? 'selected' : '' }}>🔴 Prioritas Tinggi</option>
+                            <option value="sedang" {{ request('prioritas') === 'sedang' ? 'selected' : '' }}>🟡 Prioritas Sedang</option>
+                            <option value="rendah" {{ request('prioritas') === 'rendah' ? 'selected' : '' }}>🟢 Prioritas Rendah</option>
+                        </select>
                     </div>
 
                     <!-- PERIODE (Mockup 5) -->
@@ -125,19 +158,28 @@
                 <!-- Leaflet Map Container -->
                 <div id="main-map" class="w-full h-[480px] sm:h-[540px] rounded-xl z-10"></div>
 
+                <!-- Live Counter Badge & API Indicator -->
+                <div id="map-counter-pill" class="absolute top-7 right-7 z-20 bg-white/95 backdrop-blur-sm rounded-xl px-3.5 py-1.5 border border-slate-200 shadow-sm text-xs font-semibold text-[#004d6d] flex items-center gap-2">
+                    <span id="counter-dot" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span id="counter-text">{{ count($titikLaporan) }} titik terpetakan</span>
+                    <a href="{{ url('/api/laporan') }}" target="_blank" title="Buka Endpoint JSON /api/laporan" class="text-[10px] bg-sky-50 hover:bg-sky-100 text-[#004d6d] px-2 py-0.5 rounded font-mono transition-colors">
+                        /api/laporan
+                    </a>
+                </div>
+
                 <!-- Map Legend Overlay (Mockup 5) -->
-                <div class="absolute bottom-8 left-8 z-20 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-slate-200 shadow-sm flex items-center gap-4 text-xs font-medium text-slate-700">
+                <div class="absolute bottom-8 left-8 z-20 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-slate-200 shadow-sm flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700">
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-[#d93829]"></span>
-                        <span>Prioritas tinggi</span>
+                        <span>Prioritas Tinggi</span>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="w-2.5 h-2.5 rounded-full bg-[#e07a2c]"></span>
-                        <span>Sedang</span>
+                        <span>Prioritas Sedang</span>
                     </div>
                     <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-[#026670]"></span>
-                        <span>Dipantau</span>
+                        <span class="w-2.5 h-2.5 rounded-full bg-[#10b981]"></span>
+                        <span>Prioritas Rendah</span>
                     </div>
                 </div>
             </div>
@@ -207,17 +249,20 @@
             maxZoom: 18,
         }).addTo(map);
 
-        const markersData = @json($titikLaporan);
+        // Marker Layer Group
+        const markerGroup = L.layerGroup().addTo(map);
 
-        if (markersData.length > 0) {
+        function renderMarkers(items) {
+            markerGroup.clearLayers();
             const bounds = [];
 
-            markersData.forEach(item => {
+            items.forEach(item => {
+                const markerColor = item.marker ? item.marker.color : (item.color || '#e07a2c');
                 const markerIcon = L.divIcon({
                     className: 'map-custom-marker',
                     html: `
                         <div style="
-                            background-color: ${item.color};
+                            background-color: ${markerColor};
                             width: 14px;
                             height: 14px;
                             border-radius: 50%;
@@ -231,27 +276,43 @@
                     iconAnchor: [7, 7]
                 });
 
-                const marker = L.marker([item.lat, item.lng], { icon: markerIcon }).addTo(map);
+                const lat = item.latitude !== undefined ? Number(item.latitude) : Number(item.lat);
+                const lng = item.longitude !== undefined ? Number(item.longitude) : Number(item.lng);
+                const kategoriNama = item.kategori ? (item.kategori.nama || item.kategori) : 'Sampah';
+                const prioritas = item.prioritas || 'sedang';
+                const status = (item.status || 'baru').toUpperCase();
+                const waktu = item.waktu_lalu || item.waktu || '-';
+                const urlDetail = item.url_detail || item.url || '#';
 
-                // Popup content with detail link
+                const marker = L.marker([lat, lng], { icon: markerIcon });
+
+                const priorityBadgeHtml = prioritas === 'tinggi' 
+                    ? '<span style="background-color: #fee2e2; color: #b91c1c; padding: 2px 7px; border-radius: 9999px; font-size: 10px; font-weight: 700; border: 1px solid #fca5a5;">🔴 Tinggi</span>'
+                    : (prioritas === 'rendah'
+                        ? '<span style="background-color: #d1fae5; color: #047857; padding: 2px 7px; border-radius: 9999px; font-size: 10px; font-weight: 700; border: 1px solid #6ee7b7;">🟢 Rendah</span>'
+                        : '<span style="background-color: #fef3c7; color: #b45309; padding: 2px 7px; border-radius: 9999px; font-size: 10px; font-weight: 700; border: 1px solid #fcd34d;">🟡 Sedang</span>');
+
                 const popupContent = `
-                    <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 4px; min-width: 180px;">
-                        <div style="font-size: 11px; font-weight: 700; color: #004d6d; text-transform: uppercase; margin-bottom: 2px;">
-                            ${item.kategori}
+                    <div style="font-family: 'Plus Jakarta Sans', sans-serif; padding: 4px; min-width: 200px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; gap: 6px;">
+                            <span style="font-size: 10px; font-weight: 700; color: #004d6d; text-transform: uppercase;">
+                                ${kategoriNama}
+                            </span>
+                            ${priorityBadgeHtml}
                         </div>
-                        <div style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">
+                        <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 3px;">
                             ${item.wilayah}
                         </div>
                         <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">
-                            Status: <b style="color: ${item.color}">${item.status.toUpperCase()}</b> · ${item.waktu}
+                            Status: <b style="color: #004d6d">${status}</b> · ${waktu}
                         </div>
-                        <a href="${item.url}" style="
+                        <a href="${urlDetail}" style="
                             display: block;
                             text-align: center;
                             background-color: #004d6d;
                             color: #ffffff;
                             padding: 6px 10px;
-                            border-radius: 6px;
+                            border-radius: 8px;
                             font-size: 11px;
                             font-weight: 600;
                             text-decoration: none;
@@ -262,12 +323,61 @@
                 `;
 
                 marker.bindPopup(popupContent);
-                bounds.push([item.lat, item.lng]);
+                markerGroup.addLayer(marker);
+                bounds.push([lat, lng]);
             });
 
             if (bounds.length > 0) {
                 map.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
             }
+
+            const counter = document.getElementById('counter-text');
+            if (counter) {
+                counter.textContent = items.length + ' titik terpetakan';
+            }
+        }
+
+        // Render initial markers
+        const initialMarkers = @json($titikLaporan);
+        renderMarkers(initialMarkers);
+
+        // Intercept Filter Form for Live /api/laporan AJAX updates
+        const filterForm = document.getElementById('filter-peta-form');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const dot = document.getElementById('counter-dot');
+                if (dot) dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+
+                const formData = new FormData(filterForm);
+                const params = new URLSearchParams();
+
+                // Process checkboxes and inputs
+                for (const [key, value] of formData.entries()) {
+                    if (key.endsWith('[]')) {
+                        params.append(key.replace('[]', ''), value);
+                    } else {
+                        params.set(key, value);
+                    }
+                }
+
+                fetch('{{ url('/api/laporan') }}?' + params.toString())
+                    .then(res => res.json())
+                    .then(res => {
+                        if (res.success && Array.isArray(res.data)) {
+                            renderMarkers(res.data);
+                            window.history.pushState(null, '', '{{ route('peta') }}?' + params.toString());
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Gagal mengambil titik laporan live:', err);
+                        filterForm.submit(); // Fallback submit
+                    })
+                    .finally(() => {
+                        if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+                    });
+            });
         }
     });
 </script>

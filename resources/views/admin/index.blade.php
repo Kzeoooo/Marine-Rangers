@@ -37,32 +37,33 @@
 
     <!-- 4 Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Laporan</span>
-            <div class="font-serif-title text-3xl font-bold text-slate-900">{{ $totalLaporan }}</div>
-            <span class="text-xs text-slate-500 mt-1 block">Tercatat di sistem</span>
+        <!-- TOTAL -->
+        <div class="bg-gradient-to-br from-sky-50/70 via-white to-white rounded-2xl border border-sky-100 border-l-4 border-l-sky-600 shadow-sm p-6 hover:shadow-md transition-all">
+            <span class="text-xs font-bold uppercase tracking-wider text-sky-700 block mb-2">Total Laporan</span>
+            <div class="font-serif-title text-3xl sm:text-4xl font-extrabold text-slate-900 tabular-nums">{{ number_format($totalLaporan) }}</div>
+            <span class="text-xs text-slate-500 mt-1.5 block">Seluruh laporan tercatat</span>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-rose-500 block mb-1">Perlu Penanganan</span>
-            <div class="font-serif-title text-3xl font-bold text-rose-600">{{ $laporanBaru }}</div>
-            <span class="text-xs text-slate-500 mt-1 block">Status laporan baru</span>
+        <!-- BARU -->
+        <div class="bg-gradient-to-br from-rose-50/70 via-white to-white rounded-2xl border border-rose-100 border-l-4 border-l-rose-500 shadow-sm p-6 hover:shadow-md transition-all">
+            <span class="text-xs font-bold uppercase tracking-wider text-rose-600 block mb-2">Perlu Penanganan</span>
+            <div class="font-serif-title text-3xl sm:text-4xl font-extrabold text-rose-600 tabular-nums">{{ number_format($laporanBaru) }}</div>
+            <span class="text-xs text-slate-500 mt-1.5 block">Menunggu verifikasi</span>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600 block mb-1">Aksi Selesai</span>
-            <div class="font-serif-title text-3xl font-bold text-emerald-600">{{ $laporanSelesai }}</div>
-            <span class="text-xs text-slate-500 mt-1 block">Telah dibersihkan</span>
+        <!-- DIPANTAU -->
+        <div class="bg-gradient-to-br from-amber-50/70 via-white to-white rounded-2xl border border-amber-100 border-l-4 border-l-amber-500 shadow-sm p-6 hover:shadow-md transition-all">
+            <span class="text-xs font-bold uppercase tracking-wider text-amber-600 block mb-2">Dalam Pemantauan</span>
+            <div class="font-serif-title text-3xl sm:text-4xl font-extrabold text-amber-500 tabular-nums">{{ number_format($laporanDipantau ?? 0) }}</div>
+            <span class="text-xs text-slate-500 mt-1.5 block">Dalam penanganan tim</span>
         </div>
 
-        <a href="{{ route('admin.users.index') }}" class="group bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 hover:border-indigo-300 transition-all block">
-            <div class="flex items-center justify-between">
-                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 block mb-1">Total Akun Pengguna</span>
-                <span class="text-[10px] text-indigo-600 font-semibold group-hover:underline">Kelola →</span>
-            </div>
-            <div class="font-serif-title text-3xl font-bold text-indigo-700">{{ $totalUsers }}</div>
-            <span class="text-xs text-slate-500 mt-1 block">Admin, Pemantau, Warga</span>
-        </a>
+        <!-- SELESAI -->
+        <div class="bg-gradient-to-br from-emerald-50/70 via-white to-white rounded-2xl border border-emerald-100 border-l-4 border-l-emerald-500 shadow-sm p-6 hover:shadow-md transition-all">
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 block mb-2">Aksi Selesai</span>
+            <div class="font-serif-title text-3xl sm:text-4xl font-extrabold text-emerald-600 tabular-nums">{{ number_format($laporanSelesai) }}</div>
+            <span class="text-xs text-slate-500 mt-1.5 block">Aksi pembersihan tuntas</span>
+        </div>
     </div>
 
     <!-- Tables Section: 2 Columns on LG -->
@@ -81,6 +82,7 @@
                             <th class="py-3 px-3">ID / Wilayah</th>
                             <th class="py-3 px-3">Kategori</th>
                             <th class="py-3 px-3">Pelapor</th>
+                            <th class="py-3 px-3">Prioritas</th>
                             <th class="py-3 px-3">Status</th>
                             <th class="py-3 px-3 text-right">Aksi</th>
                         </tr>
@@ -97,6 +99,9 @@
                                 </td>
                                 <td class="py-3 px-3">
                                     {{ $lap->user->nama ?? 'Warga' }}
+                                </td>
+                                <td class="py-3 px-3">
+                                    <x-badge-prioritas :prioritas="$lap->prioritas ?? 'sedang'" :skor="$lap->skor_prioritas" size="sm" />
                                 </td>
                                 <td class="py-3 px-3">
                                     @php
@@ -120,7 +125,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-6 text-center text-slate-400">Belum ada laporan insiden.</td>
+                                <td colspan="6" class="py-6 text-center text-slate-400">Belum ada laporan insiden.</td>
                             </tr>
                         @endforelse
                     </tbody>

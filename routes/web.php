@@ -2,9 +2,11 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\Api\ApiLaporanController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PetaController;
+use App\Http\Controllers\StatistikController;
 use App\Models\Laporan;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +18,15 @@ Route::get('/', function () {
         $laporanTerbaru = collect();
     }
     return view('welcome', compact('laporanTerbaru'));
+});
+
+// Halaman Dashboard Statistik (Terbuka untuk Umum & Terautentikasi)
+Route::get('/statistik', [StatistikController::class, 'index'])->name('statistik');
+
+// Endpoint API dengan Session Support untuk Frontend Interaktif
+Route::prefix('api')->group(function () {
+    Route::get('/laporan', [ApiLaporanController::class, 'index']);
+    Route::get('/statistik', [StatistikController::class, 'apiStatistik']);
 });
 
 // Route Tamu (Hanya untuk pengguna yang belum login)
@@ -51,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/laporan/{id}/edit', [LaporanController::class, 'edit'])->name('laporan.edit');
     Route::put('/laporan/{id}', [LaporanController::class, 'update'])->name('laporan.update');
     Route::delete('/laporan/{id}', [LaporanController::class, 'destroy'])->name('laporan.destroy');
+    Route::post('/laporan/{id}/prioritas', [LaporanController::class, 'updatePrioritas'])->name('laporan.update_prioritas');
 
     // Aksi Pembersihan dan Update Status (Eksklusif Pemantau Wilayah)
     Route::middleware('role:pemantau')->group(function () {

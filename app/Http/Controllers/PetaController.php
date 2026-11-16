@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\WilayahHelper;
 use App\Models\Kategori;
 use App\Models\Laporan;
 use Carbon\Carbon;
@@ -64,6 +65,12 @@ class PetaController extends Controller
             $query->where('waktu_laporan', '>=', now()->subDays(30));
         }
 
+        // Filter Prioritas
+        $prioritasFilter = $request->input('prioritas');
+        if (!empty($prioritasFilter) && in_array($prioritasFilter, Laporan::PRIORITAS_LIST, true)) {
+            $query->where('prioritas', $prioritasFilter);
+        }
+
         $laporans = $query->get();
 
         // Query dasar untuk statistik (jika pemantau, statistik hanya untuk wilayah tugasnya)
@@ -101,19 +108,14 @@ class PetaController extends Controller
 
         // Siapkan Data Titik Spasial untuk Leaflet Map
         $titikLaporan = $laporans->map(function ($lap) {
-            $color = '#d93829'; // default red
-            $priorityLabel = 'Prioritas tinggi';
-
-            if ($lap->status === Laporan::STATUS_BARU) {
-                $color = '#d93829'; // Red
-                $priorityLabel = 'Prioritas tinggi';
-            } elseif ($lap->status === Laporan::STATUS_DITINDAKLANJUTI) {
-                $color = '#e07a2c'; // Orange
-                $priorityLabel = 'Sedang';
-            } else {
-                $color = '#026670'; // Teal/Blue
-                $priorityLabel = 'Dipantau';
-            }
+            $priorityLevel = $lap->prioritas ?? 'sedang';
+            $color = match($priorityLevel) {
+                'tinggi' => '#d93829', // Merah (Urgensi Tinggi)
+                'sedang' => '#e07a2c', // Oranye/Amber (Urgensi Sedang)
+                'rendah' => '#10b981', // Hijau (Urgensi Rendah)
+                default => '#e07a2c',
+            };
+            $priorityLabel = 'Prioritas ' . ucfirst($priorityLevel);
 
             return [
                 'id' => $lap->id_laporan,
@@ -122,6 +124,8 @@ class PetaController extends Controller
                 'lat' => (float) $lap->latitude,
                 'lng' => (float) $lap->longitude,
                 'status' => $lap->status,
+                'prioritas' => $priorityLevel,
+                'skor_prioritas' => $lap->skor_prioritas,
                 'color' => $color,
                 'priority' => $priorityLabel,
                 'deskripsi' => $lap->deskripsi ?? 'Tumpukan sampah pesisir',
@@ -134,20 +138,30 @@ class PetaController extends Controller
         if ($isPemantauWilayah) {
             $daftarWilayah = collect([$wilayahTugasPemantau]);
         } else {
-            $daftarWilayah = Laporan::select('wilayah')->distinct()->pluck('wilayah');
+            $existingWilayah = Laporan::select('wilayah')->distinct()->pluck('wilayah');
+            $nationalWilayah = collect(WilayahHelper::allNames());
+            $daftarWilayah = $existingWilayah->merge($nationalWilayah)->unique()->values();
         }
 
-        // Koordinat default fokus peta
+        // Koordinat default fokus peta (Fokus Indonesia / Pesisir Surabaya)
         $defaultCenter = [-7.2275, 112.7888];
         $defaultZoom = 12;
 
-        if ($isPemantauWilayah && isset(self::KOORDINAT_WILAYAH[$wilayahTugasPemantau])) {
-            $defaultCenter = [
-                self::KOORDINAT_WILAYAH[$wilayahTugasPemantau]['lat'],
-                self::KOORDINAT_WILAYAH[$wilayahTugasPemantau]['lng'],
-            ];
-            $defaultZoom = 15;
+        if ($isPemantauWilayah) {
+            $coord = WilayahHelper::getCoordinates($wilayahTugasPemantau) ?? (self::KOORDINAT_WILAYAH[$wilayahTugasPemantau] ?? null);
+            if ($coord) {
+                $defaultCenter = [$coord['lat'], $coord['lng']];
+                $defaultZoom = 15;
+            }
+        } elseif (!empty($wilayahFilter) && $wilayahFilter !== 'semua') {
+            $coord = WilayahHelper::getCoordinates($wilayahFilter) ?? (self::KOORDINAT_WILAYAH[$wilayahFilter] ?? null);
+            if ($coord) {
+                $defaultCenter = [$coord['lat'], $coord['lng']];
+                $defaultZoom = 14;
+            }
         }
+
+        $zonaWilayah = WilayahHelper::ZONA_WILAYAH;
 
         return view('peta.index', compact(
             'kategoris',
@@ -161,6 +175,7 @@ class PetaController extends Controller
             'wilayahFilter',
             'periodeFilter',
             'daftarWilayah',
+            'zonaWilayah',
             'isPemantauWilayah',
             'wilayahTugasPemantau',
             'defaultCenter',

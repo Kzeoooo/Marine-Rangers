@@ -17,20 +17,31 @@ Proyek Tugas Besar Mata Kuliah **Pengembangan Perangkat Lunak (PPL)** dengan met
 
 ## 🌊 Fitur Utama
 
-1. **Pelaporan Sampah Pesisir (Masyarakat / Relawan)**:
+1. **Pelaporan Sampah Pesisir & Manajemen Laporan Saya (Masyarakat / Relawan)**:
    - Pelaporan sampah berbasis foto bukti dan geolokasi (GPS/koordinat otomatis).
    - Kategorisasi jenis sampah (plastik, styrofoam, jaring/ghost gear, kaca/logam, dll.).
+   - **Fitur CRUD Mandiri**: Relawan dapat memantau, mengedit informasi (foto, lokasi, kategori, deskripsi), serta membatalkan/menghapus laporannya sendiri selama masih berstatus `baru`.
+   - **Kalkulasi Prioritas Otomatis**: Sistem otomatis menilai tingkat urgensi laporan (*Tinggi, Sedang, Rendah*) dengan algoritma scoring berbasis bahaya kategori, analisis kata kunci urgensi, dan kepadatan laporan.
 2. **Peta Sebaran Spasial & Pemantauan Khusus Wilayah (Role Pemantau)**:
    - **Isolasi Wilayah Tugas Pemantau**: Setiap pemantau difokuskan hanya pada daerah penugasannya masing-masing (contoh: Kenjeran, Kedung Cowek, Tambak Wedi, dll.).
-   - Peta interaktif Leaflet otomatis memusatkan tampilan (*auto-center* & *auto-zoom*) ke koordinat pesisir wilayah tugas.
+   - Peta interaktif Leaflet otomatis memusatkan tampilan (*auto-center* & *auto-zoom*) ke koordinat pesisir wilayah tugas dengan visualisasi marker prioritas warna (Merah = Tinggi, Oranye = Sedang, Hijau = Rendah).
    - Statistik operasional (Total Laporan, Laporan Aktif, Persentase Tindak Lanjut) terhitung secara lokal untuk area pemantau terkait.
-   - **Wewenang Eksklusif Pengubahan Status**: Hanya pemantau wilayah yang berhak mengubah tahapan status laporan (*Dipantau* ➔ *Ditindaklanjuti* ➔ *Selesai*) untuk menjaga integritas fakta lapangan.
+   - **Wewenang Eksklusif Pengubahan Status & Kalibrasi Prioritas**: Pemantau wilayah berhak mengubah tahapan status laporan (*Dipantau* ➔ *Ditindaklanjuti* ➔ *Selesai*) dan mengkalibrasi tingkat prioritas sesuai fakta lapangan.
    - Proteksi otorisasi berlapis (HTTP 403 Forbidden) mencegah akses dan aksi di luar wilayah kewenangan.
 3. **Panel Kontrol Administrator & Manajemen Pengguna (Dinas Lingkungan Hidup)**:
    - **Kelola Akun Pengguna (`/admin/pengguna`)**: Administrator dapat mengelola seluruh akun pengguna sistem (Admin, Pemantau Wilayah, Relawan Masyarakat), mendaftarkan pemantau baru lengkap dengan penetapan `wilayah_tugas`, memperbarui profil dan peran, serta menghapus akun secara aman.
    - Pengawasan menyeluruh (*monitoring & audit trail*) seluruh titik wilayah pesisir tanpa batasan area (mode pengawasan read-only pada detail laporan).
    - Pemantauan aktivitas sistem, rekapitulasi akun pengguna, dan penugasan wilayah pemantau.
-4. **Alur Status Laporan & Konfirmasi Pembersihan**:
+4. **Dashboard Statistik & Visualisasi Analitik Pesisir (`/statistik`)**:
+   - **Grafik Tren Perkembangan Laporan**: Visualisasi time series interaktif perkembangan volume sampah yang dilaporkan vs aksi pembersihan yang selesai tuntas dari waktu ke waktu.
+   - **Grafik Komposisi Kategori Sampah**: Visualisasi proporsi sampah laut (Plastik, Organik, Logam, B3, Kaca, Kertas).
+   - **Peringkat Wilayah Pencemaran Tertinggi**: Leaderboard titik pesisir paling rawan akumulasi sampah dilengkapi persentase tindak lanjut aksi bersih.
+   - **Distribusi Urgensi & Status**: Pemantauan jumlah laporan berdasarkan skala prioritas (Tinggi, Sedang, Rendah) dan status penanganan.
+   - Filter rentang waktu (7 hari, 30 hari, semua waktu) dan filter wilayah pesisir dengan tombol segarkan live data.
+5. **REST API JSON & Integrasi Spasial**:
+   - **`GET /api/laporan`**: Endpoint data titik insiden sampah pesisir dalam format JSON dan GeoJSON `FeatureCollection` untuk Leaflet dan aplikasi seluler, dilengkapi filter parameter fleksibel serta isolasi wilayah tugas pemantau otomatis.
+   - **`GET /api/statistik`**: Endpoint analitik data tren, metrik KPI, komposisi sampah, dan peringkat wilayah tercemar.
+6. **Alur Status Laporan & Konfirmasi Pembersihan**:
    - 4 Tahapan status transparan: **Baru** ➔ **Dipantau** ➔ **Ditindaklanjuti** ➔ **Selesai**.
    - Pelaporan hasil aksi pembersihan pantai disertai unggah foto bukti dan deskripsi hasil oleh pemantau lapangan.
 
@@ -140,7 +151,7 @@ php artisan test --testdox
 Skema mengacu pada ERD sistem dengan penyesuaian atribut penugasan wilayah:
 - **`users`** (PK: `id_user`): `nama`, `email`, `password`, `role` (*masyarakat / pemantau / admin*), `organisasi`, **`wilayah_tugas`** *(daerah penugasan khusus pemantau)*
 - **`kategori`** (PK: `id_kategori`): master jenis sampah pesisir
-- **`laporan`** (PK: `id_laporan`, FK: `id_user`, `id_kategori`): koordinat latitude/longitude, foto bukti, deskripsi, waktu insiden, `wilayah`, `status`
+- **`laporan`** (PK: `id_laporan`, FK: `id_user`, `id_kategori`): koordinat latitude/longitude, foto bukti, deskripsi, waktu insiden, `wilayah`, `status` (*baru/dipantau/ditindaklanjuti/selesai*), `prioritas` (*rendah/sedang/tinggi*), `skor_prioritas` (0-100)
 - **`pembersihan`** (PK: `id_pembersihan`, FK: `id_laporan`, `id_user`): dokumentasi hasil tindak lanjut pembersihan sampah di lapangan
 - **`log_aktivitas`** (PK: `id_log`, FK: `id_user`): audit trail setiap aktivitas pengguna di sistem
 - **`dashboard`** (PK: `id_dashboard`, FK: `id_user`): preferensi metrik dasbor

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\LogAktivitasHelper;
+use App\Helpers\WilayahHelper;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,6 +57,7 @@ class AdminUserController extends Controller
         $totalMasyarakat = User::where('role', User::ROLE_MASYARAKAT)->count();
 
         $daftarWilayah = self::DAFTAR_WILAYAH;
+        $zonaWilayah = WilayahHelper::ZONA_WILAYAH;
 
         return view('admin.users.index', compact(
             'users',
@@ -65,7 +67,8 @@ class AdminUserController extends Controller
             'totalAdmin',
             'totalPemantau',
             'totalMasyarakat',
-            'daftarWilayah'
+            'daftarWilayah',
+            'zonaWilayah'
         ));
     }
 

@@ -29,6 +29,17 @@ class Laporan extends Model
         self::STATUS_SELESAI,
     ];
 
+    // Konstanta Tingkat Prioritas Laporan
+    public const PRIORITAS_RENDAH = 'rendah';
+    public const PRIORITAS_SEDANG = 'sedang';
+    public const PRIORITAS_TINGGI = 'tinggi';
+
+    public const PRIORITAS_LIST = [
+        self::PRIORITAS_RENDAH,
+        self::PRIORITAS_SEDANG,
+        self::PRIORITAS_TINGGI,
+    ];
+
     /**
      * Default model attribute values.
      *
@@ -36,6 +47,8 @@ class Laporan extends Model
      */
     protected $attributes = [
         'status' => self::STATUS_BARU,
+        'prioritas' => self::PRIORITAS_SEDANG,
+        'skor_prioritas' => 0,
     ];
 
     /**
@@ -53,6 +66,8 @@ class Laporan extends Model
         'deskripsi',
         'waktu_laporan',
         'status',
+        'prioritas',
+        'skor_prioritas',
     ];
 
     /**
@@ -66,7 +81,24 @@ class Laporan extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'waktu_laporan' => 'datetime',
+            'skor_prioritas' => 'integer',
         ];
+    }
+
+    // Prioritas Helper Methods
+    public function isPrioritasTinggi(): bool
+    {
+        return $this->prioritas === self::PRIORITAS_TINGGI;
+    }
+
+    public function isPrioritasSedang(): bool
+    {
+        return $this->prioritas === self::PRIORITAS_SEDANG;
+    }
+
+    public function isPrioritasRendah(): bool
+    {
+        return $this->prioritas === self::PRIORITAS_RENDAH;
     }
 
     // Status Helper Methods

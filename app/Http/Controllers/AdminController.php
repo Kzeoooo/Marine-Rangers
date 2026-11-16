@@ -19,6 +19,7 @@ class AdminController extends Controller
     {
         $totalLaporan = Laporan::count();
         $laporanBaru = Laporan::where('status', Laporan::STATUS_BARU)->count();
+        $laporanDipantau = Laporan::whereIn('status', [Laporan::STATUS_DIPANTAU, Laporan::STATUS_DITINDAKLANJUTI])->count();
         $laporanSelesai = Laporan::where('status', Laporan::STATUS_SELESAI)->count();
         $totalUsers = User::count();
 
@@ -39,6 +40,7 @@ class AdminController extends Controller
         return view('admin.index', compact(
             'totalLaporan',
             'laporanBaru',
+            'laporanDipantau',
             'laporanSelesai',
             'totalUsers',
             'laporans',

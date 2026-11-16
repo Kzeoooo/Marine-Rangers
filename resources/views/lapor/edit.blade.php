@@ -103,19 +103,28 @@
                         type="text" 
                         id="displayLokasi" 
                         name="wilayah" 
+                        list="daftar-wilayah-datalist"
                         value="{{ old('wilayah', $laporan->wilayah) }}" 
                         required
-                        placeholder="Contoh: Pantai Kenjeran, Surabaya" 
+                        placeholder="Pilih atau ketik wilayah pesisir di Indonesia..." 
                         class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#004d6d]/20 focus:border-[#004d6d] transition-all bg-white"
                     >
+                    <datalist id="daftar-wilayah-datalist">
+                        @foreach(\App\Helpers\WilayahHelper::allNames() as $namaPantai)
+                            <option value="{{ $namaPantai }}"></option>
+                        @endforeach
+                    </datalist>
                 </div>
 
                 <!-- Hidden Latitude and Longitude -->
                 <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', $laporan->latitude) }}">
                 <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', $laporan->longitude) }}">
-                <p class="text-[11px] text-slate-400 mt-1.5 flex items-center gap-1.5">
-                    <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    <span>Koordinat saat ini: <span id="coordDisplay">{{ $laporan->latitude }}, {{ $laporan->longitude }}</span></span>
+                <p class="text-[11px] text-slate-400 mt-1.5 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5">
+                        <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        <span>Koordinat aktif: <span id="coordDisplay">{{ $laporan->latitude }}, {{ $laporan->longitude }}</span></span>
+                    </span>
+                    <span class="text-[10px] text-slate-400 italic">Mencakup pesisir seluruh Nusantara</span>
                 </p>
             </div>
 
@@ -207,6 +216,21 @@
                 }
             );
         }
+    }
+
+    // Auto-update coordinates when picking a preset region from datalist
+    const wilayahCoordinates = @json(collect(\App\Helpers\WilayahHelper::ZONA_WILAYAH)->collapse());
+    const lokasiInput = document.getElementById('displayLokasi');
+    if (lokasiInput) {
+        lokasiInput.addEventListener('change', function() {
+            const val = this.value.trim();
+            if (wilayahCoordinates[val]) {
+                const coord = wilayahCoordinates[val];
+                document.getElementById('latitude').value = coord.lat;
+                document.getElementById('longitude').value = coord.lng;
+                document.getElementById('coordDisplay').innerText = coord.lat + ', ' + coord.lng;
+            }
+        });
     }
 </script>
 @endpush
